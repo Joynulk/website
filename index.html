@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>মেলা — Mela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#fbf3e4;--ink:#2a1b3d;--red:#d7263d;--green:#0f8b6d;--gold:#f4a300;--card:#fffaf0;--line:#e6d6b8;--mute:#6d5f7a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#1a1226;--ink:#f6ead2;--card:#251a35;--line:#3d2d52;--mute:#b3a4c4}}
+*{box-sizing:border-box}html{scroll-padding-top:70px;scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 "Hind Siliguri",system-ui,sans-serif}
+h1,h2,h3,.logo{font-family:"Tiro Bangla","Hind Siliguri",serif;font-weight:400;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px dashed var(--line);display:flex;align-items:center;gap:12px;padding:10px 16px}
+.logo{font-size:30px;color:var(--red);text-decoration:none;flex:none}
+.search{flex:1;display:flex;justify-content:flex-end}
+.sb{position:relative;overflow:hidden;width:44px;height:44px;border:2px solid var(--ink);border-radius:22px;background:var(--card);color:var(--ink);transition:width .35s ease}
+.sb:focus-within,.sb:has(input:not(:placeholder-shown)){width:min(320px,100%)}
+.sb:focus-within{outline:3px solid var(--gold);outline-offset:2px}
+.sb input{width:100%;height:100%;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;padding:0 14px 0 40px;cursor:pointer}
+.ic{position:absolute;left:10px;top:50%;margin-top:-10px;width:20px;height:20px;pointer-events:none}.hid{display:none}
+.sb.busy .ic:first-child{animation:iw .7s ease-in-out infinite}@keyframes iw{25%{transform:translateX(4px) rotate(12deg)}75%{transform:translateX(-4px) rotate(-12deg)}}
+.scan{position:absolute;left:0;bottom:0;width:50%;height:3px;background:var(--red);animation:sc 1.1s linear infinite}@keyframes sc{from{transform:translateX(-100%)}to{transform:translateX(200%)}}
+.pop{animation:pp .5s cubic-bezier(.17,.89,.32,1.49)}@keyframes pp{0%{transform:scale(0) rotate(-45deg);opacity:0}70%{transform:scale(1.25) rotate(8deg)}100%{transform:none;opacity:1}}
+.p.ra{animation:ra .45s ease both}@keyframes ra{0%{opacity:0;transform:translateY(-15px) scale(.94)}70%{transform:translateY(2px) scale(1.01)}100%{opacity:1;transform:none}}
+.cartbtn.bump{animation:bm .4s ease}@keyframes bm{40%{transform:scale(1.12) rotate(-3deg)}}
+.cartbtn{flex:none;background:var(--ink);color:var(--paper);border:0;border-radius:22px;height:44px;padding:0 16px;font-weight:600}
+.hero{text-align:center;padding:28px 16px 0}
+.hero h1{font-size:clamp(34px,7vw,64px);line-height:1.15}
+.hero p{max-width:46ch;margin:8px auto 0;color:var(--mute)}
+.bunting{height:18px;margin:14px 0 0;background:repeating-linear-gradient(90deg,var(--red) 0 28px,var(--gold) 28px 56px,var(--green) 56px 84px,#3b6fd6 84px 112px);clip-path:polygon(0 0,100% 0,100% 40%,98% 100%,94% 40%,90% 100%,86% 40%,0 40%)}
+.stage{height:300px;perspective:1100px;position:relative;margin:10px auto 0;max-width:1000px;touch-action:pan-y;user-select:none}
+.ring{position:absolute;inset:0;margin:auto;width:150px;height:200px;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.2,.8,.2,1)}
+.stall{position:absolute;inset:0;border-radius:16px;border:3px solid var(--ink);display:grid;place-items:center;text-align:center;cursor:pointer;color:#2a1b3d;box-shadow:6px 6px 0 var(--ink);backface-visibility:hidden}
+.stall b{font-size:56px;display:block;line-height:1.1}.stall span{font-family:"Tiro Bangla",serif;font-size:21px}
+.ctrl{display:flex;justify-content:center;gap:10px;margin:0 0 6px}
+.ctrl button{width:44px;height:44px;border-radius:50%;border:2px solid var(--ink);background:var(--card)}
+main{max-width:1100px;margin:0 auto;padding:12px 16px 60px}
+.bar{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 12px}
+.bar h2{font-size:28px}.bar small{color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
+.p{background:var(--card);border:2px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0}
+.p .ph{aspect-ratio:1;display:grid;place-items:center;font-size:72px;cursor:pointer;border:0;width:100%}
+.p .in{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
+.p h3{font-size:18px}.p .pr{font-weight:600;color:var(--green)}
+.add{margin-top:auto;border:2px solid var(--ink);background:var(--gold);color:#2a1b3d;border-radius:8px;padding:6px;font-weight:600}
+.add:active{transform:translateY(1px)}
+.empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:40px 0}
+footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);color:var(--mute)}
+.mo{position:fixed;inset:0;z-index:50;background:rgba(20,10,30,0);visibility:hidden;transition:background .4s,visibility 0s .45s}
+.mo.show{visibility:visible;background:rgba(20,10,30,.62);transition:background .4s}
+.mp{position:fixed;overflow:hidden;color:var(--ink);border:3px solid var(--ink);background:color-mix(in srgb,var(--ac,#f4a300) 40%,var(--card));transition:left .5s,top .5s,width .5s,height .5s,border-radius .5s;transition-timing-function:cubic-bezier(.2,.8,.2,1)}
+.mp .x{position:absolute;float:none;right:8px;top:8px;z-index:2}
+.mc{opacity:0;transition:opacity .15s}.mp.full .mc{opacity:1;transition:opacity .35s .3s}
+.mph{height:230px;display:grid;place-items:center;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 55%,var(--ac) 0,transparent 62%)}
+.mph span{font-size:120px;line-height:1;display:block;animation:fl 3s ease-in-out infinite}@keyframes fl{50%{transform:translateY(-10px) rotate(-3deg)}}
+.mph::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-100%)}
+.mp.full .mph::after{animation:sw 1s .5s ease forwards}@keyframes sw{to{transform:translateX(100%)}}
+.m-b{padding:16px;background:var(--card)}.m-b p{margin:6px 0 12px;color:var(--mute)}
+.vs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.vr{border:2px solid var(--ink);background:var(--card);border-radius:20px;padding:4px 12px}.vr.on{background:var(--ac);color:#2a1b3d;font-weight:600}
+.qr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:22px}.qc{display:flex;align-items:center;gap:12px}.qc button{width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:var(--paper)}
+.big{width:100%;padding:12px;font-size:18px}.x{float:right;margin:8px;width:40px;height:40px;border-radius:50%;border:2px solid var(--ink);background:var(--paper)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(380px,100%);background:var(--paper);border-left:3px solid var(--ink);z-index:30;transform:translateX(105%);transition:transform .35s ease;display:flex;flex-direction:column;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+.drawer.open{transform:none}.drawer h2{font-size:26px;margin-bottom:8px}
+.items{flex:1;overflow:auto}.row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.row i{font-style:normal;font-size:30px}.row div{flex:1;line-height:1.3}.row button{width:32px;height:32px;border-radius:50%;border:2px solid var(--ink);background:var(--card)}
+.tot{display:flex;justify-content:space-between;font-size:20px;font-weight:600;padding:12px 0}
+.buy{background:var(--red);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:600}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,40px);opacity:0;background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:20px;transition:.3s;z-index:40;pointer-events:none}
+.toast.on{transform:translate(-50%,0);opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="#top">মেলা</a>
+  <div class="search"><div class="sb" id="sb"><svg id="si" class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6.5" stroke-width="2"/><path d="M16 16L21 21" stroke-width="2" stroke-linecap="round"/></svg><svg id="ok" class="ic hid" viewBox="0 0 24 24" fill="none" stroke="#0f8b6d"><path d="M5 12.5L9.5 17L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><input id="q" type="search" placeholder="পণ্য খুঁজুন…" aria-label="পণ্য খুঁজুন" autocomplete="off"><i class="scan hid" id="scan"></i></div></div>
+  <button class="cartbtn" id="cartBtn">কার্ট (<span id="cnt">০</span>)</button>
+</header>
+
+<section class="hero" id="top">
+  <h1>সব কিছুর মেলা, এক জায়গায়</h1>
+  <p>দেশি শখের জিনিস, হাতের কাজ আর রোজকার প্রয়োজন। পছন্দের দোকান ঘুরিয়ে দেখুন।</p>
+  <div class="bunting" aria-hidden="true"></div>
+</section>
+
+<div class="stage" id="stage" aria-label="দোকানের তালিকা"><div class="ring" id="ring"></div></div>
+<div class="ctrl"><button id="prev" aria-label="আগের দোকান">←</button><button id="next" aria-label="পরের দোকান">→</button></div>
+
+<main>
+  <div class="bar"><h2 id="title">সব পণ্য</h2><small id="count"></small></div>
+  <div class="grid" id="grid"></div>
+</main>
+<footer>© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</footer>
+
+<div class="mo" id="morph"><div class="mp" id="mp" role="dialog" aria-modal="true" aria-labelledby="mt"><button class="x" id="dx" aria-label="বন্ধ করুন">✕</button><div class="mc"><div class="mph"><span id="mph"></span></div><div class="m-b"><h3 id="mt"></h3><p id="md"></p><div class="vs" id="mv"></div><div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="mtot"></b></div><button class="add big" id="mb">কার্টে যোগ করুন</button></div></div></div></div>
+
+<aside class="drawer" id="drawer" aria-label="কার্ট">
+  <button class="x" id="cx" aria-label="কার্ট বন্ধ করুন">✕</button>
+  <h2>আপনার কার্ট</h2><div class="items" id="items"></div>
+  <div class="tot"><span>মোট</span><span id="total">৳০</span></div>
+  <button class="buy" id="buy">অর্ডার করুন</button>
+</aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+const CATS=[
+ {id:"all",n:"সব দোকান",e:"🎪",c:"#f4a300"},
+ {id:"cloth",n:"শাড়ি ও পোশাক",e:"🥻",c:"#f28ba0"},
+ {id:"craft",n:"হাতের কাজ",e:"🏺",c:"#e9a56b"},
+ {id:"food",n:"খাবার",e:"🍯",c:"#9fd8a3"},
+ {id:"toy",n:"খেলনা",e:"🪁",c:"#8ec5f2"},
+ {id:"home",n:"ঘরকন্না",e:"🪔",c:"#c9a7ec"}
+];
+const P=[
+ {id:1,n:"জামদানি শাড়ি",c:"cloth",p:4800,e:"🥻",d:"হাতে বোনা জামদানি, নকশাদার পাড়।"},
+ {id:2,n:"নকশি কাঁথা",c:"cloth",p:2200,e:"🧵",d:"গ্রামের মায়েদের হাতে সেলাই করা কাঁথা।"},
+ {id:3,n:"পাঞ্জাবি",c:"cloth",p:1450,e:"👘",d:"নরম সুতি কাপড়ের হালকা পাঞ্জাবি।"},
+ {id:4,n:"মাটির পুতুল",c:"craft",p:350,e:"🪆",d:"কুমারপাড়ার হাতে গড়া রঙিন পুতুল।"},
+ {id:5,n:"শীতলপাটি",c:"craft",p:1800,e:"🧺",d:"সিলেটের ঐতিহ্যবাহী শীতলপাটি, গরমে আরাম।"},
+ {id:6,n:"বাঁশের ঝুড়ি",c:"craft",p:420,e:"🧺",d:"শক্ত বাঁশের বুননে তৈরি বহুমুখী ঝুড়ি।"},
+ {id:7,n:"খাঁটি মধু",c:"food",p:650,e:"🍯",d:"সুন্দরবনের ফুলের মধু, ৫০০ গ্রাম।"},
+ {id:8,n:"নলেন গুড়",c:"food",p:380,e:"🟤",d:"খেজুরের রসের সুগন্ধি গুড়, ১ কেজি।"},
+ {id:9,n:"আচারের সেট",c:"food",p:520,e:"🫙",d:"আম, জলপাই ও চালতার তিন স্বাদের আচার।"},
+ {id:10,n:"রঙিন ঘুড়ি",c:"toy",p:120,e:"🪁",d:"হালকা কাগজ ও বাঁশের কঞ্চির ঘুড়ি।"},
+ {id:11,n:"কাঠের লাটিম",c:"toy",p:150,e:"🪀",d:"হাতে কাটা কাঠের লাটিম, সুতোসহ।"},
+ {id:12,n:"মাটির প্রদীপ",c:"home",p:180,e:"🪔",d:"১২টি প্রদীপের এক সেট।"},
+ {id:13,n:"পিতলের ঘটি",c:"home",p:950,e:"🏺",d:"খাঁটি পিতলের ঘটি, ঝকঝকে পালিশ।"},
+ {id:14,n:"তালপাখা",c:"home",p:90,e:"🪭",d:"বিদ্যুৎ ছাড়াই বাতাস, গরমের বন্ধু।"}
+];
+const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
+const $=id=>document.getElementById(id);
+const tone=id=>CATS.find(x=>x.id===id).c;
+let cat="all",term="",cart={},cur=0;
+
+/* 3D ring of stalls */
+const ring=$("ring"),N=CATS.length,R=Math.round(95/Math.tan(Math.PI/N))+30;
+CATS.forEach((c,i)=>{
+  const s=document.createElement("button");s.className="stall";s.style.background=c.c;
+  s.style.transform=`rotateY(${i*360/N}deg) translateZ(${R}px)`;
+  s.innerHTML=`<div><b>${c.e}</b><span>${c.n}</span></div>`;
+  s.onclick=()=>{go(i);setCat(c.id)};ring.appendChild(s);
+});
+function go(i){cur=i;ring.style.transform=`translateZ(${-R}px) rotateY(${-i*360/N}deg)`}
+$("next").onclick=()=>go(cur+1);$("prev").onclick=()=>go(cur-1);
+go(0);
+let sx=null;
+$("stage").addEventListener("pointerdown",e=>sx=e.clientX);
+addEventListener("pointerup",e=>{if(sx!==null&&Math.abs(e.clientX-sx)>40)go(cur+(e.clientX<sx?1:-1));sx=null});
+if(!matchMedia("(prefers-reduced-motion:reduce)").matches)setInterval(()=>{if(!document.hidden&&!mo.classList.contains("show"))go(cur+1)},5000);
+
+/* grid */
+function setCat(id){cat=id;render();$("grid").scrollIntoView({block:"start"})}
+function render(anim){
+  const list=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(term.trim()));
+  $("title").textContent=CATS.find(c=>c.id===cat).n==="সব দোকান"?"সব পণ্য":CATS.find(c=>c.id===cat).n;
+  $("count").textContent=bn(list.length)+"টি পণ্য";
+  $("grid").innerHTML=list.length?list.map(p=>`<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${p.id}" aria-label="${p.n} বিস্তারিত">${p.e}</button><div class="in"><h3>${p.n}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`).join(""):`<div class="empty">"${term}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
+}
+$("grid").onclick=e=>{
+  const a=e.target.closest("[data-a]"),v=e.target.closest("[data-v]");
+  if(a)add(a.dataset.a+":0");if(v)openP(+v.dataset.v,v);
+};
+let st;
+$("q").oninput=e=>{
+  term=e.target.value;const sb=$("sb"),sc=$("scan");clearTimeout(st);
+  $("ok").classList.add("hid");$("si").classList.remove("hid");
+  if(!term.trim()){sb.classList.remove("busy");sc.classList.add("hid");render();return}
+  sb.classList.add("busy");sc.classList.remove("hid");
+  st=setTimeout(()=>{sb.classList.remove("busy");sc.classList.add("hid");render(true);
+    $("si").classList.add("hid");const k=$("ok");k.classList.remove("hid","pop");void k.offsetWidth;k.classList.add("pop")},600);
+};
+
+/* product morph: card grows into a detail panel */
+const mo=$("morph"),mp=$("mp"),VAR=[{n:"সাধারণ",x:0},{n:"উপহার প্যাক",x:60}];
+let cp,qty=1,vi=0,src;
+const lp=k=>{const[i,v]=k.split(":"),p=P.find(x=>x.id==i);return{p,pr:p.p+VAR[v].x,vn:+v?" ("+VAR[v].n+")":""}};
+const setR=(r,rad)=>{mp.style.cssText+=`;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${rad}px`};
+const tgt=()=>{const w=Math.min(420,innerWidth-24),h=Math.min(590,innerHeight-24);return{left:(innerWidth-w)/2,top:(innerHeight-h)/2,width:w,height:h}};
+function paint(){$("mtot").textContent=tk((cp.p+VAR[vi].x)*qty);$("mq").textContent=bn(qty);[...$("mv").children].forEach((b,i)=>b.classList.toggle("on",i===vi))}
+function openP(id,btn){
+  cp=P.find(x=>x.id===id);qty=1;vi=0;mp.style.setProperty("--ac",tone(cp.c));
+  $("mph").textContent=cp.e;$("mt").textContent=cp.n;$("md").textContent=cp.d;$("mb").textContent="কার্টে যোগ করুন";
+  $("mv").innerHTML=VAR.map((v,i)=>`<button class="vr" data-i="${i}">${v.n}</button>`).join("");paint();
+  src=btn.closest(".p").getBoundingClientRect();
+  mp.classList.remove("full");mp.style.transition="none";setR(src,12);mp.getBoundingClientRect();mp.style.transition="";
+  mo.classList.add("show");
+  requestAnimationFrame(()=>{mp.classList.add("full");setR(tgt(),20)});
+  $("dx").focus({preventScroll:true});
+}
+function closeP(){mp.classList.remove("full");setR(src,12);setTimeout(()=>mo.classList.remove("show"),400)}
+$("dx").onclick=closeP;mo.onclick=e=>{if(e.target===mo)closeP()};
+addEventListener("keydown",e=>{if(e.key==="Escape"&&mo.classList.contains("show"))closeP()});
+$("mv").onclick=e=>{if(e.target.dataset.i){vi=+e.target.dataset.i;paint()}};
+$("mm").onclick=()=>{qty=Math.max(1,qty-1);paint()};$("mpl").onclick=()=>{qty++;paint()};
+$("mb").onclick=()=>{add(cp.id+":"+vi,qty);$("mb").textContent="যোগ হয়েছে ✓";setTimeout(closeP,700)};
+
+/* cart */
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1600)}
+function add(k,q=1){const cb=$("cartBtn");cb.classList.remove("bump");void cb.offsetWidth;cb.classList.add("bump");cart[k]=(cart[k]||0)+q;draw();toast(lp(k).p.n+" কার্টে যোগ হয়েছে")}
+function draw(){
+  const ids=Object.keys(cart).filter(k=>cart[k]>0);
+  $("cnt").textContent=bn(ids.reduce((s,k)=>s+cart[k],0));
+  $("total").textContent=tk(ids.reduce((s,k)=>s+cart[k]*lp(k).pr,0));
+  $("items").innerHTML=ids.length?ids.map(k=>{const L=lp(k),p=L.p;
+    return `<div class="row"><i>${p.e}</i><div>${p.n}${L.vn}<br><small>${tk(L.pr)}</small></div><button data-m="${k}" aria-label="কমান">−</button><b>${bn(cart[k])}</b><button data-p="${k}" aria-label="বাড়ান">+</button></div>`}).join(""):`<p class="empty">কার্ট এখন খালি। পছন্দের পণ্য যোগ করুন।</p>`;
+}
+$("items").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;
+  if(m)cart[m]--;if(p)cart[p]++;draw()};
+$("cartBtn").onclick=()=>$("drawer").classList.add("open");
+$("cx").onclick=()=>$("drawer").classList.remove("open");
+$("buy").onclick=()=>{if(!Object.values(cart).some(v=>v>0)){toast("আগে কার্টে পণ্য যোগ করুন");return}location.href="cart.html"};
+try{JSON.parse(localStorage.getItem("mela_cart")||"[]").forEach(l=>cart[l.k]=l.q)}catch(e){}
+const d0=draw;draw=function(){d0();try{localStorage.setItem("mela_cart",JSON.stringify(Object.keys(cart).filter(k=>cart[k]>0).map(k=>{const L=lp(k);return{k,n:L.p.n+L.vn,e:L.p.e,pr:L.pr,q:cart[k]}})))}catch(e){}};
+render();draw();
+</script>
+</body>
+</html>
