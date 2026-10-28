@@ -17,6 +17,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px dashed var(--line);display:flex;align-items:center;gap:12px;padding:10px 16px}
 .logo{font-size:30px;color:var(--red);text-decoration:none;flex:none}
+.sn{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:8px 16px 0;font-size:15px}
+.sn a{color:var(--ink);text-decoration:none;border:2px solid var(--line);border-radius:20px;padding:0 14px;background:var(--card)}
 .search{flex:1;display:flex;justify-content:flex-end}
 .sb{position:relative;overflow:hidden;width:44px;height:44px;border:2px solid var(--ink);border-radius:22px;background:var(--card);color:var(--ink);transition:width .35s ease}
 .sb:focus-within,.sb:has(input:not(:placeholder-shown)){width:min(320px,100%)}
@@ -41,16 +43,18 @@ header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2p
 .ctrl button{width:44px;height:44px;border-radius:50%;border:2px solid var(--ink);background:var(--card)}
 main{max-width:1100px;margin:0 auto;padding:12px 16px 60px}
 .bar{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 12px}
-.bar h2{font-size:28px}.bar small{color:var(--mute)}
+.bar h2{font-size:28px}.bar small{color:var(--mute)}.bar a{color:var(--red)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px}
-.p{background:var(--card);border:2px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0}
+.p{position:relative;background:var(--card);border:2px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0}
 .p .ph{aspect-ratio:1;display:grid;place-items:center;font-size:72px;cursor:pointer;border:0;width:100%}
 .p .in{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
 .p h3{font-size:18px}.p .pr{font-weight:600;color:var(--green)}
+.hrt{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:2px solid var(--ink);background:var(--card);color:var(--red);font-size:20px;line-height:1}
 .add{margin-top:auto;border:2px solid var(--ink);background:var(--gold);color:#2a1b3d;border-radius:8px;padding:6px;font-weight:600}
 .add:active{transform:translateY(1px)}
 .empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:40px 0}
 footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);color:var(--mute)}
+footer a{color:var(--mute);margin:0 6px}
 .mo{position:fixed;inset:0;z-index:50;background:rgba(20,10,30,0);visibility:hidden;transition:background .4s,visibility 0s .45s}
 .mo.show{visibility:visible;background:rgba(20,10,30,.62);transition:background .4s}
 .mp{position:fixed;overflow:hidden;color:var(--ink);border:3px solid var(--ink);background:color-mix(in srgb,var(--ac,#f4a300) 40%,var(--card));transition:left .5s,top .5s,width .5s,height .5s,border-radius .5s;transition-timing-function:cubic-bezier(.2,.8,.2,1)}
@@ -61,6 +65,7 @@ footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);col
 .mph::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.55) 50%,transparent 60%);transform:translateX(-100%)}
 .mp.full .mph::after{animation:sw 1s .5s ease forwards}@keyframes sw{to{transform:translateX(100%)}}
 .m-b{padding:16px;background:var(--card)}.m-b p{margin:6px 0 12px;color:var(--mute)}
+.mlink{display:block;text-align:center;margin-top:10px;color:var(--ink)}
 .vs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}.vr{border:2px solid var(--ink);background:var(--card);border-radius:20px;padding:4px 12px}.vr.on{background:var(--ac);color:#2a1b3d;font-weight:600}
 .qr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-size:22px}.qc{display:flex;align-items:center;gap:12px}.qc button{width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:var(--paper)}
 .big{width:100%;padding:12px;font-size:18px}.x{float:right;margin:8px;width:40px;height:40px;border-radius:50%;border:2px solid var(--ink);background:var(--paper)}
@@ -81,6 +86,7 @@ footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);col
   <div class="search"><div class="sb" id="sb"><svg id="si" class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="6.5" stroke-width="2"/><path d="M16 16L21 21" stroke-width="2" stroke-linecap="round"/></svg><svg id="ok" class="ic hid" viewBox="0 0 24 24" fill="none" stroke="#0f8b6d"><path d="M5 12.5L9.5 17L19 7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg><input id="q" type="search" placeholder="পণ্য খুঁজুন…" aria-label="পণ্য খুঁজুন" autocomplete="off"><i class="scan hid" id="scan"></i></div></div>
   <button class="cartbtn" id="cartBtn">কার্ট (<span id="cnt">০</span>)</button>
 </header>
+<nav class="sn" aria-label="প্রধান মেনু"><a href="shop.html">🛍️ সব পণ্য</a><a href="wishlist.html">♡ প্রিয় তালিকা</a><a href="account.html">👤 আমার অ্যাকাউন্ট</a></nav>
 
 <section class="hero" id="top">
   <h1>সব কিছুর মেলা, এক জায়গায়</h1>
@@ -92,12 +98,12 @@ footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);col
 <div class="ctrl"><button id="prev" aria-label="আগের দোকান">←</button><button id="next" aria-label="পরের দোকান">→</button></div>
 
 <main>
-  <div class="bar"><h2 id="title">সব পণ্য</h2><small id="count"></small></div>
+  <div class="bar"><h2 id="title">সব পণ্য</h2><small id="count"></small><a id="allp" href="shop.html">ফিল্টার ও সাজানোসহ দেখুন →</a></div>
   <div class="grid" id="grid"></div>
 </main>
-<footer>© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</footer>
+<footer><a href="shop.html">দোকান</a>·<a href="wishlist.html">প্রিয় তালিকা</a>·<a href="account.html">অ্যাকাউন্ট</a><br>© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</footer>
 
-<div class="mo" id="morph"><div class="mp" id="mp" role="dialog" aria-modal="true" aria-labelledby="mt"><button class="x" id="dx" aria-label="বন্ধ করুন">✕</button><div class="mc"><div class="mph"><span id="mph"></span></div><div class="m-b"><h3 id="mt"></h3><p id="md"></p><div class="vs" id="mv"></div><div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="mtot"></b></div><button class="add big" id="mb">কার্টে যোগ করুন</button></div></div></div></div>
+<div class="mo" id="morph"><div class="mp" id="mp" role="dialog" aria-modal="true" aria-labelledby="mt"><button class="x" id="dx" aria-label="বন্ধ করুন">✕</button><div class="mc"><div class="mph"><span id="mph"></span></div><div class="m-b"><h3 id="mt"></h3><p id="md"></p><div class="vs" id="mv"></div><div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="mtot"></b></div><button class="add big" id="mb">কার্টে যোগ করুন</button><a class="mlink" id="ml" href="shop.html">পূর্ণ বিবরণ দেখুন →</a></div></div></div></div>
 
 <aside class="drawer" id="drawer" aria-label="কার্ট">
   <button class="x" id="cx" aria-label="কার্ট বন্ধ করুন">✕</button>
@@ -107,31 +113,9 @@ footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);col
 </aside>
 <div class="toast" id="toast" role="status"></div>
 
+<script src="mela.js"></script>
 <script>
-const CATS=[
- {id:"all",n:"সব দোকান",e:"🎪",c:"#f4a300"},
- {id:"cloth",n:"শাড়ি ও পোশাক",e:"🥻",c:"#f28ba0"},
- {id:"craft",n:"হাতের কাজ",e:"🏺",c:"#e9a56b"},
- {id:"food",n:"খাবার",e:"🍯",c:"#9fd8a3"},
- {id:"toy",n:"খেলনা",e:"🪁",c:"#8ec5f2"},
- {id:"home",n:"ঘরকন্না",e:"🪔",c:"#c9a7ec"}
-];
-const P=[
- {id:1,n:"জামদানি শাড়ি",c:"cloth",p:4800,e:"🥻",d:"হাতে বোনা জামদানি, নকশাদার পাড়।"},
- {id:2,n:"নকশি কাঁথা",c:"cloth",p:2200,e:"🧵",d:"গ্রামের মায়েদের হাতে সেলাই করা কাঁথা।"},
- {id:3,n:"পাঞ্জাবি",c:"cloth",p:1450,e:"👘",d:"নরম সুতি কাপড়ের হালকা পাঞ্জাবি।"},
- {id:4,n:"মাটির পুতুল",c:"craft",p:350,e:"🪆",d:"কুমারপাড়ার হাতে গড়া রঙিন পুতুল।"},
- {id:5,n:"শীতলপাটি",c:"craft",p:1800,e:"🧺",d:"সিলেটের ঐতিহ্যবাহী শীতলপাটি, গরমে আরাম।"},
- {id:6,n:"বাঁশের ঝুড়ি",c:"craft",p:420,e:"🧺",d:"শক্ত বাঁশের বুননে তৈরি বহুমুখী ঝুড়ি।"},
- {id:7,n:"খাঁটি মধু",c:"food",p:650,e:"🍯",d:"সুন্দরবনের ফুলের মধু, ৫০০ গ্রাম।"},
- {id:8,n:"নলেন গুড়",c:"food",p:380,e:"🟤",d:"খেজুরের রসের সুগন্ধি গুড়, ১ কেজি।"},
- {id:9,n:"আচারের সেট",c:"food",p:520,e:"🫙",d:"আম, জলপাই ও চালতার তিন স্বাদের আচার।"},
- {id:10,n:"রঙিন ঘুড়ি",c:"toy",p:120,e:"🪁",d:"হালকা কাগজ ও বাঁশের কঞ্চির ঘুড়ি।"},
- {id:11,n:"কাঠের লাটিম",c:"toy",p:150,e:"🪀",d:"হাতে কাটা কাঠের লাটিম, সুতোসহ।"},
- {id:12,n:"মাটির প্রদীপ",c:"home",p:180,e:"🪔",d:"১২টি প্রদীপের এক সেট।"},
- {id:13,n:"পিতলের ঘটি",c:"home",p:950,e:"🏺",d:"খাঁটি পিতলের ঘটি, ঝকঝকে পালিশ।"},
- {id:14,n:"তালপাখা",c:"home",p:90,e:"🪭",d:"বিদ্যুৎ ছাড়াই বাতাস, গরমের বন্ধু।"}
-];
+const {CATS,P,VAR}=Mela;
 const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
 const $=id=>document.getElementById(id);
 const tone=id=>CATS.find(x=>x.id===id).c;
@@ -159,11 +143,13 @@ function render(anim){
   const list=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(term.trim()));
   $("title").textContent=CATS.find(c=>c.id===cat).n==="সব দোকান"?"সব পণ্য":CATS.find(c=>c.id===cat).n;
   $("count").textContent=bn(list.length)+"টি পণ্য";
-  $("grid").innerHTML=list.length?list.map(p=>`<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${p.id}" aria-label="${p.n} বিস্তারিত">${p.e}</button><div class="in"><h3>${p.n}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`).join(""):`<div class="empty">"${term}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
+  $("allp").href="shop.html"+(cat==="all"?"":"?c="+cat);
+  $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id);return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${p.id}" aria-label="${p.n} বিস্তারিত">${p.e}</button><button class="hrt" data-w="${p.id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${p.n}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`}).join(""):`<div class="empty">"${term}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
 }
 $("grid").onclick=e=>{
-  const a=e.target.closest("[data-a]"),v=e.target.closest("[data-v]");
+  const a=e.target.closest("[data-a]"),v=e.target.closest("[data-v]"),w=e.target.closest("[data-w]");
   if(a)add(a.dataset.a+":0");if(v)openP(+v.dataset.v,v);
+  if(w){const on=Mela.toggleWish(w.dataset.w);w.textContent=on?"♥":"♡";w.setAttribute("aria-pressed",on);toast(on?"প্রিয় তালিকায় যোগ হয়েছে":"প্রিয় তালিকা থেকে সরানো হয়েছে")}
 };
 let st;
 $("q").oninput=e=>{
@@ -176,7 +162,7 @@ $("q").oninput=e=>{
 };
 
 /* product morph: card grows into a detail panel */
-const mo=$("morph"),mp=$("mp"),VAR=[{n:"সাধারণ",x:0},{n:"উপহার প্যাক",x:60}];
+const mo=$("morph"),mp=$("mp");
 let cp,qty=1,vi=0,src;
 const lp=k=>{const[i,v]=k.split(":"),p=P.find(x=>x.id==i);return{p,pr:p.p+VAR[v].x,vn:+v?" ("+VAR[v].n+")":""}};
 const setR=(r,rad)=>{mp.style.cssText+=`;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;border-radius:${rad}px`};
@@ -185,6 +171,7 @@ function paint(){$("mtot").textContent=tk((cp.p+VAR[vi].x)*qty);$("mq").textCont
 function openP(id,btn){
   cp=P.find(x=>x.id===id);qty=1;vi=0;mp.style.setProperty("--ac",tone(cp.c));
   $("mph").textContent=cp.e;$("mt").textContent=cp.n;$("md").textContent=cp.d;$("mb").textContent="কার্টে যোগ করুন";
+  $("ml").href="product.html?id="+cp.id;
   $("mv").innerHTML=VAR.map((v,i)=>`<button class="vr" data-i="${i}">${v.n}</button>`).join("");paint();
   src=btn.closest(".p").getBoundingClientRect();
   mp.classList.remove("full");mp.style.transition="none";setR(src,12);mp.getBoundingClientRect();mp.style.transition="";
