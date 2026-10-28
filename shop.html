@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>দোকান — মেলা</title></head><body>
+<header id="hd"></header>
+<main class="wide"><h2>সব পণ্য</h2>
+<div class="tools">
+<input id="q" type="search" placeholder="পণ্য খুঁজুন…" aria-label="পণ্য খুঁজুন" autocomplete="off">
+<select id="so" aria-label="সাজান"><option value="">সাজান: ডিফল্ট</option><option value="pa">দাম: কম থেকে বেশি</option><option value="pd">দাম: বেশি থেকে কম</option><option value="nm">নাম অনুযায়ী</option></select>
+<select id="pf" aria-label="দামের সীমা"><option value="">সব দাম</option><option value="0-500">৫০০ টাকার নিচে</option><option value="500-1500">৫০০ থেকে ১৫০০ টাকার নিচে</option><option value="1500-99999">১৫০০ টাকা বা তার বেশি</option></select>
+</div>
+<div class="chips" id="chips" role="group" aria-label="ক্যাটাগরি"></div>
+<p class="cnt" id="cnt" aria-live="polite"></p>
+<div class="grid" id="grid"></div></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {CATS,P,$,bn}=Mela;Mela.header("shop");
+const u=Mela.params();
+let cat=CATS.some(c=>c.id===u.get("c"))?u.get("c"):"all";
+$("q").value=u.get("q")||"";
+$("chips").innerHTML=CATS.map(c=>`<button class="chip" data-c="${c.id}">${c.e} ${c.n}</button>`).join("");
+function render(){
+  const t=$("q").value.trim(),[lo,hi]=($("pf").value||"0-99999").split("-").map(Number),so=$("so").value;
+  const L=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(t)&&p.p>=lo&&p.p<hi);
+  if(so==="pa")L.sort((a,b)=>a.p-b.p);
+  if(so==="pd")L.sort((a,b)=>b.p-a.p);
+  if(so==="nm")L.sort((a,b)=>a.n.localeCompare(b.n,"bn"));
+  [...$("chips").children].forEach(b=>{const on=b.dataset.c===cat;b.classList.toggle("on",on);b.setAttribute("aria-pressed",on)});
+  $("cnt").textContent=bn(L.length)+"টি পণ্য";
+  $("grid").innerHTML=L.length?L.map(p=>Mela.card(p)).join(""):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। ফিল্টার বদলে দেখুন।</div>';
+}
+$("chips").onclick=e=>{const b=e.target.closest("[data-c]");if(b){cat=b.dataset.c;render()}};
+$("q").oninput=render;$("so").onchange=render;$("pf").onchange=render;
+Mela.bindGrid($("grid"));
+render();
+</script></body></html>

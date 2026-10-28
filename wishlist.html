@@ -1,0 +1,15 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>প্রিয় তালিকা — মেলা</title></head><body>
+<header id="hd"></header>
+<main class="wide"><h2>আমার প্রিয় তালিকা</h2><p class="cnt" id="cnt" aria-live="polite"></p><div class="grid" id="grid"></div></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {P,$,bn}=Mela;Mela.header("wish");
+function render(){
+  const L=P.filter(p=>Mela.isWish(p.id));
+  $("cnt").textContent=L.length?bn(L.length)+"টি পণ্য":"";
+  $("grid").innerHTML=L.length?L.map(p=>Mela.card(p)).join(""):'<div class="empty">প্রিয় তালিকা এখন খালি। <a href="shop.html">পণ্য ঘুরে দেখুন</a> আর পছন্দের পণ্যে ♡ চাপুন।</div>';
+}
+Mela.bindGrid($("grid"),render);
+render();
+</script></body></html>

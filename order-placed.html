@@ -1,15 +1,19 @@
 <!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>অর্ডার সম্পন্ন — মেলা</title></head><body>
-<header><a class="logo" href="index.html">মেলা</a></header>
+<header id="hd"></header>
 <main id="m"><div class="ok" aria-hidden="true">🎉</div><h2 style="text-align:center">ধন্যবাদ! অর্ডার পাওয়া গেছে</h2>
 <p id="info" style="text-align:center;color:var(--mute)"></p><div id="ls"></div>
 <div class="sum"><div class="t"><span>মোট (ক্যাশ অন ডেলিভারি)</span><span id="tot"></span></div></div>
-<a class="btn" href="index.html">আবার কেনাকাটা করুন</a></main>
+<a class="btn" href="shop.html">আবার কেনাকাটা করুন</a>
+<a class="btn alt" href="account.html">আমার অর্ডার দেখুন</a></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
 <script>
-const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n),$=id=>document.getElementById(id);
-let o=null;try{o=JSON.parse(localStorage.getItem("mela_order"))}catch(e){}
-if(!o){$("m").innerHTML='<p class="empty">কোনো অর্ডার পাওয়া যায়নি। <a href="index.html">দোকানে ফিরুন</a></p>'}
-else{const t=document.createTextNode.bind(document);
-$("info").textContent="অর্ডার নম্বর "+o.id+" · "+o.name+" · "+o.phone;
-$("ls").innerHTML=o.lines.map(l=>`<div class="row"><i>${l.e}</i><div>${l.n}</div><b>${bn(l.q)} × ${tk(l.pr)}</b></div>`).join("");
-$("tot").textContent=tk(o.total)}
+const {$,bn,tk,esc}=Mela;Mela.header("");
+const o=Mela.get("mela_order",null);
+if(!o){$("m").innerHTML='<p class="empty">কোনো অর্ডার পাওয়া যায়নি। <a href="shop.html">দোকানে ফিরুন</a></p>'}
+else{
+  $("info").textContent="অর্ডার নম্বর "+o.id+" · "+o.name+" · "+o.phone;
+  $("ls").innerHTML=o.lines.map(l=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}</div><b>${bn(l.q)} × ${tk(l.pr)}</b></div>`).join("");
+  $("tot").textContent=tk(o.total);
+}
 </script></body></html>
