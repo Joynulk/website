@@ -1,24 +1,35 @@
 <!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>কার্ট — মেলা</title></head><body>
-<header><a class="logo" href="index.html">মেলা</a><a href="index.html">← কেনাকাটায় ফিরুন</a></header>
+<header id="hd"></header>
 <main><h2>আপনার কার্ট</h2><div id="lines"></div>
 <div class="sum"><div><span>পণ্যের দাম</span><span id="sub"></span></div><div><span>ডেলিভারি (২০০০ টাকার নিচে)</span><span id="ship"></span></div><div class="t"><span>মোট</span><span id="tot"></span></div></div>
 <h2>ডেলিভারির ঠিকানা</h2>
 <form id="f"><label for="nm">নাম</label><input id="nm" required autocomplete="name">
 <label for="ph">মোবাইল নম্বর</label><input id="ph" required inputmode="numeric" pattern="01[3-9][0-9]{8}" title="১১ সংখ্যার বাংলাদেশি নম্বর, যেমন 017XXXXXXXX" autocomplete="tel">
 <label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required autocomplete="street-address"></textarea>
+<label class="chk"><input type="checkbox" id="sv" checked> পরের বার জন্য আমার তথ্য এই ব্রাউজারে মনে রাখুন</label>
 <button class="btn" id="go" type="submit">অর্ডার নিশ্চিত করুন (ক্যাশ অন ডেলিভারি)</button></form></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
 <script>
-const $=id=>document.getElementById(id),bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
-let L=[];try{L=JSON.parse(localStorage.getItem("mela_cart")||"[]")}catch(e){}
+const {$,bn,tk,esc}=Mela;Mela.header("cart");
+let L=Mela.cartLines();
 const fee=s=>s&&s<2000?60:0;
-function draw(){L=L.filter(l=>l.q>0);try{localStorage.setItem("mela_cart",JSON.stringify(L))}catch(e){}
-const sub=L.reduce((s,l)=>s+l.pr*l.q,0),sh=fee(sub);
-$("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i>${l.e}</i><div>${l.n}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="index.html">কেনাকাটা শুরু করুন</a></p>';
-$("sub").textContent=tk(sub);$("ship").textContent=sh?tk(sh):"বিনামূল্যে";$("tot").textContent=tk(sub+sh);$("go").disabled=!L.length}
+const u=Mela.user();if(u){$("nm").value=u.name||"";$("ph").value=u.phone||"";$("ad").value=u.addr||""}
+function draw(){
+  L=L.filter(l=>l.q>0);Mela.set("mela_cart",L);Mela.refreshBadge();
+  const sub=L.reduce((s,l)=>s+l.pr*l.q,0),sh=fee(sub);
+  $("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
+  $("sub").textContent=tk(sub);$("ship").textContent=sh?tk(sh):"বিনামূল্যে";$("tot").textContent=tk(sub+sh);$("go").disabled=!L.length;
+}
 $("lines").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;if(m!==undefined)L[m].q--;if(p!==undefined)L[p].q++;draw()};
-$("f").onsubmit=e=>{e.preventDefault();const sub=L.reduce((s,l)=>s+l.pr*l.q,0);
-const o={id:"M"+String(Date.now()).slice(-7),name:$("nm").value.trim(),phone:$("ph").value,addr:$("ad").value.trim(),lines:L,total:sub+fee(sub)};
-try{localStorage.setItem("mela_order",JSON.stringify(o));localStorage.removeItem("mela_cart")}catch(e){}
-location.href="order-placed.html"};
+$("f").onsubmit=e=>{
+  e.preventDefault();if(!L.length)return;
+  const sub=L.reduce((s,l)=>s+l.pr*l.q,0);
+  const o={id:"M"+String(Date.now()).slice(-7),name:$("nm").value.trim(),phone:$("ph").value.trim(),addr:$("ad").value.trim(),lines:L,total:sub+fee(sub),date:new Date().toISOString(),status:"প্রক্রিয়াধীন"};
+  Mela.addOrder(o);Mela.set("mela_order",o);
+  if($("sv").checked)Mela.setUser({name:o.name,phone:o.phone,addr:o.addr});
+  try{localStorage.removeItem("mela_cart")}catch(err){}
+  location.href="order-placed.html";
+};
 draw();
 </script></body></html>

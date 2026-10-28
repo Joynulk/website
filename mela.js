@@ -1,0 +1,91 @@
+/* মেলা — shared data and helpers (plain browser JS, no build step) */
+const Mela=(()=>{
+const CATS=[
+ {id:"all",n:"সব দোকান",e:"🎪",c:"#f4a300"},
+ {id:"cloth",n:"শাড়ি ও পোশাক",e:"🥻",c:"#f28ba0"},
+ {id:"craft",n:"হাতের কাজ",e:"🏺",c:"#e9a56b"},
+ {id:"food",n:"খাবার",e:"🍯",c:"#9fd8a3"},
+ {id:"toy",n:"খেলনা",e:"🪁",c:"#8ec5f2"},
+ {id:"home",n:"ঘরকন্না",e:"🪔",c:"#c9a7ec"}
+];
+const P=[
+ {id:1,n:"জামদানি শাড়ি",c:"cloth",p:4800,e:"🥻",d:"হাতে বোনা জামদানি, নকশাদার পাড়।"},
+ {id:2,n:"নকশি কাঁথা",c:"cloth",p:2200,e:"🧵",d:"গ্রামের মায়েদের হাতে সেলাই করা কাঁথা।"},
+ {id:3,n:"পাঞ্জাবি",c:"cloth",p:1450,e:"👘",d:"নরম সুতি কাপড়ের হালকা পাঞ্জাবি।"},
+ {id:4,n:"মাটির পুতুল",c:"craft",p:350,e:"🪆",d:"কুমারপাড়ার হাতে গড়া রঙিন পুতুল।"},
+ {id:5,n:"শীতলপাটি",c:"craft",p:1800,e:"🧺",d:"সিলেটের ঐতিহ্যবাহী শীতলপাটি, গরমে আরাম।"},
+ {id:6,n:"বাঁশের ঝুড়ি",c:"craft",p:420,e:"🧺",d:"শক্ত বাঁশের বুননে তৈরি বহুমুখী ঝুড়ি।"},
+ {id:7,n:"খাঁটি মধু",c:"food",p:650,e:"🍯",d:"সুন্দরবনের ফুলের মধু, ৫০০ গ্রাম।"},
+ {id:8,n:"নলেন গুড়",c:"food",p:380,e:"🟤",d:"খেজুরের রসের সুগন্ধি গুড়, ১ কেজি।"},
+ {id:9,n:"আচারের সেট",c:"food",p:520,e:"🫙",d:"আম, জলপাই ও চালতার তিন স্বাদের আচার।"},
+ {id:10,n:"রঙিন ঘুড়ি",c:"toy",p:120,e:"🪁",d:"হালকা কাগজ ও বাঁশের কঞ্চির ঘুড়ি।"},
+ {id:11,n:"কাঠের লাটিম",c:"toy",p:150,e:"🪀",d:"হাতে কাটা কাঠের লাটিম, সুতোসহ।"},
+ {id:12,n:"মাটির প্রদীপ",c:"home",p:180,e:"🪔",d:"১২টি প্রদীপের এক সেট।"},
+ {id:13,n:"পিতলের ঘটি",c:"home",p:950,e:"🏺",d:"খাঁটি পিতলের ঘটি, ঝকঝকে পালিশ।"},
+ {id:14,n:"তালপাখা",c:"home",p:90,e:"🪭",d:"বিদ্যুৎ ছাড়াই বাতাস, গরমের বন্ধু।"}
+];
+const VAR=[{n:"সাধারণ",x:0},{n:"উপহার প্যাক",x:60}];
+
+const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tone=id=>(CATS.find(c=>c.id===id)||CATS[0]).c;
+const params=()=>new URLSearchParams(location.search);
+
+/* localStorage helpers */
+const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
+const set=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+/* cart: lines [{k:"id:variant",n,e,pr,q}] under mela_cart */
+const cartLines=()=>get("mela_cart",[]).filter(l=>l.q>0);
+const cartCount=()=>cartLines().reduce((s,l)=>s+l.q,0);
+function refreshBadge(){const b=$("cb");if(b)b.textContent=bn(cartCount())}
+function addToCart(id,vi=0,q=1){
+  vi=+vi||0;const p=P.find(x=>x.id==id);if(!p)return;
+  const k=p.id+":"+vi,L=cartLines(),f=L.find(l=>l.k===k);
+  if(f)f.q+=q;else L.push({k,n:p.n+(vi?" ("+VAR[vi].n+")":""),e:p.e,pr:p.p+VAR[vi].x,q});
+  set("mela_cart",L);refreshBadge();
+}
+
+/* wishlist: array of product ids under mela_wish */
+const wish=()=>get("mela_wish",[]);
+const isWish=id=>wish().includes(+id);
+function toggleWish(id){id=+id;let w=wish();const on=!w.includes(id);w=on?[...w,id]:w.filter(x=>x!==id);set("mela_wish",w);return on}
+
+/* orders and saved customer details (browser only until phase 2) */
+const orders=()=>get("mela_orders",[]);
+const addOrder=o=>set("mela_orders",[...orders(),o]);
+const user=()=>get("mela_user",null);
+const setUser=u=>set("mela_user",u);
+
+function toast(t){
+  let el=$("toast");
+  if(!el){el=document.createElement("div");el.id="toast";el.className="toast";el.setAttribute("role","status");document.body.appendChild(el)}
+  el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1600);
+}
+
+/* shared header + footer */
+function header(active){
+  const h=$("hd");
+  if(h){
+    const a=(href,key,ico,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}><span aria-hidden="true">${ico}</span><span class="t">&nbsp;${t}</span>${extra}</a>`;
+    h.innerHTML=`<a class="logo" href="index.html">মেলা</a><nav class="nv" aria-label="প্রধান মেনু">${a("shop.html","shop","🛍️","দোকান")}${a("wishlist.html","wish","♡","প্রিয়")}${a("account.html","acc","👤","অ্যাকাউন্ট")}${a("cart.html","cart","🛒","কার্ট",`<b class="bd" id="cb">${bn(cartCount())}</b>`)}</nav>`;
+  }
+  const f=$("ft");if(f)f.innerHTML="© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত";
+}
+
+/* product card used by shop, wishlist and product pages */
+function card(p){
+  const w=isWish(p.id);
+  return `<article class="p"><a class="ph" href="product.html?id=${p.id}" style="background:${tone(p.c)}55" aria-label="${p.n} বিস্তারিত">${p.e}</a><button class="hrt${w?" on":""}" data-w="${p.id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${p.id}">${p.n}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`;
+}
+function bindGrid(el,after){
+  el.addEventListener("click",e=>{
+    const a=e.target.closest("[data-a]"),w=e.target.closest("[data-w]");
+    if(a){addToCart(a.dataset.a);toast(P.find(x=>x.id==a.dataset.a).n+" কার্টে যোগ হয়েছে")}
+    if(w){const on=toggleWish(w.dataset.w);w.classList.toggle("on",on);w.textContent=on?"♥":"♡";w.setAttribute("aria-pressed",on);if(after)after()}
+  });
+}
+
+return{CATS,P,VAR,bn,tk,$,esc,tone,params,get,set,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+})();

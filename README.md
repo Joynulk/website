@@ -1,9 +1,22 @@
 # মেলা (Mela)
-Static e-commerce website. No build step — open `index.html` or host on GitHub Pages.
+Static single-vendor e-commerce website. No build step: open `index.html` or host on GitHub Pages.
 
-- `index.html` — home: 3D stall carousel, animated search, product morph, cart drawer
-- `cart.html` — cart review + delivery form
+## Pages
+- `index.html` — home: 3D stall carousel, animated search, product morph, cart drawer, wishlist hearts
+- `shop.html` — all products with category chips, search, sort and price filter
+- `product.html?id=N` — product detail: variants, quantity, add to cart, buy now, related products
+- `wishlist.html` — saved products
+- `cart.html` — cart review + delivery form (cash on delivery)
 - `order-placed.html` — order confirmation
-- `mela.css` — shared styles for cart and confirmation pages
+- `account.html` — saved customer details and order history
 
-Cart and order data live in the browser's localStorage (no backend).
+## Shared files
+- `mela.js` — product and category data, cart, wishlist, orders, header and card helpers (global `Mela`)
+- `mela.css` — styles for every page except `index.html`, which keeps its own inline styles
+
+## Data
+Everything lives in the browser's localStorage (no backend yet): `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`.
+To add or change a product, edit the `P` list in `mela.js`.
+
+## Next
+Phase 2: database, real login, and an admin panel for the shop owner.
