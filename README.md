@@ -21,5 +21,15 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 - Cart, wishlist and saved details stay in the browser's localStorage: `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`, `mela_catalog`.
 - The Supabase URL and publishable key in `mela.js` are public by design. Access is limited by the row level security rules in `schema.sql`. Never put a `service_role` or secret key in this repo.
 
+## Docs (`Doc/`)
+1. [`1.plan.md`](Doc/1.plan.md) — goals, decisions, status, phases, what is skipped
+2. [`2.architecture.md`](Doc/2.architecture.md) — structure, modules, data flow, limits
+3. [`3.business-rules.md`](Doc/3.business-rules.md) — fixed rules, proposed defaults, open decisions, order statuses
+4. [`4.database.md`](Doc/4.database.md) — tables, access rules, functions, known gaps
+5. [`5.api.md`](Doc/5.api.md) — Supabase calls and error shapes
+6. [`6.security.md`](Doc/6.security.md) — security checklist and status
+7. [`7.testing.md`](Doc/7.testing.md) — test plan (nothing has been run yet)
+8. [`8.deployment.md`](Doc/8.deployment.md) — environments, changes, rollback, backups, go-live checklist
+
 ## Next
 Real customer login, then an admin panel for the shop owner (products, orders, status).
