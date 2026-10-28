@@ -1,24 +1,116 @@
 <!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>অ্যাকাউন্ট — মেলা</title></head><body>
 <header id="hd"></header>
-<main><h2>আমার তথ্য</h2>
+<main>
+<p class="note" id="msg" role="status"></p>
+<section id="rec" hidden><h2>নতুন পাসওয়ার্ড দিন</h2>
+<form id="rf"><label for="np">নতুন পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label><input id="np" type="password" minlength="8" required autocomplete="new-password"><button class="btn" type="submit">পাসওয়ার্ড বদলান</button></form></section>
+<section id="auth" hidden><h2>লগইন বা নতুন অ্যাকাউন্ট</h2>
+<p class="note">লগইন করলে আপনার অর্ডার ইতিহাস ও ঠিকানা সব ডিভাইসে পাবেন। লগইন ছাড়াও অর্ডার করা যায়।</p>
+<form id="af"><label for="em">ইমেইল</label><input id="em" type="email" required autocomplete="email">
+<label for="pw">পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label><input id="pw" type="password" minlength="8" required autocomplete="current-password">
+<button class="btn" type="submit" id="li">লগইন</button>
+<button class="btn alt" type="button" id="su">নতুন অ্যাকাউন্ট খুলুন</button>
+<button class="btn alt" type="button" id="fp">পাসওয়ার্ড ভুলে গেছেন?</button></form></section>
+<section id="me" hidden><h2>আমার অ্যাকাউন্ট</h2><p>লগইন আছে: <b id="who"></b></p><button class="btn alt" id="lo" type="button">লগ আউট</button></section>
+<h2>ডেলিভারির তথ্য</h2>
 <form id="f"><label for="nm">নাম</label><input id="nm" required autocomplete="name">
 <label for="ph">মোবাইল নম্বর</label><input id="ph" required inputmode="numeric" pattern="01[3-9][0-9]{8}" title="১১ সংখ্যার বাংলাদেশি নম্বর, যেমন 017XXXXXXXX" autocomplete="tel">
-<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required autocomplete="street-address"></textarea>
+<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required minlength="5" autocomplete="street-address"></textarea>
 <button class="btn" type="submit">তথ্য সংরক্ষণ করুন</button>
 <button class="btn alt" type="button" id="clr">সংরক্ষিত তথ্য মুছুন</button></form>
-<p class="note">এই তথ্য শুধু আপনার এই ব্রাউজারে থাকে এবং চেকআউটে আপনার ঠিকানা নিজে থেকে বসাতে কাজে লাগে। লগইন আর সব ডিভাইসে অর্ডার ইতিহাস পরের ধাপে আসবে।</p>
+<p class="note" id="pnote"></p>
 <h2>আমার অর্ডার</h2><div id="ords"></div></main>
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
 const {$,bn,tk,esc}=Mela;Mela.header("acc");
 const fd=d=>{if(!d)return"";try{return new Date(d).toLocaleDateString("bn-BD",{day:"numeric",month:"long",year:"numeric"})}catch(e){return""}};
+const say=(t,bad)=>{const m=$("msg");m.textContent=t;m.style.color=bad?"var(--red)":"var(--green)"};
+const nice=m=>/invalid login/i.test(m)?"ইমেইল বা পাসওয়ার্ড ভুল।"
+  :/already (been )?registered/i.test(m)?"এই ইমেইলে অ্যাকাউন্ট আছে, লগইন করুন।"
+  :/not confirmed/i.test(m)?"আগে ইমেইল যাচাই করুন।"
+  :/rate limit|too many|only request this after/i.test(m)?"অনেকবার চেষ্টা হয়েছে, একটু পরে আবার চেষ্টা করুন।"
+  :/password/i.test(m)?"পাসওয়ার্ড সহজ বা ছোট। কমপক্ষে ৮ অক্ষরের ভালো পাসওয়ার্ড দিন।"
+  :"কাজটি হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
+const busy=b=>["li","su","fp"].forEach(i=>$(i).disabled=b);
 function fill(){const u=Mela.user()||{};$("nm").value=u.name||"";$("ph").value=u.phone||"";$("ad").value=u.addr||""}
-function orders(){
-  const L=Mela.orders().slice().reverse();
-  $("ords").innerHTML=L.length?L.map(o=>`<article class="ord"><div class="oh"><b>${esc(o.id)}</b><span class="st">${esc(o.status||"প্রক্রিয়াধীন")}</span></div><small>${esc(fd(o.date))}</small><ul>${(o.lines||[]).map(l=>`<li>${esc(l.e)} ${esc(l.n)} × ${bn(l.q)}</li>`).join("")}</ul><div class="ot">মোট: ${tk(o.total)}</div></article>`).join(""):'<p class="empty">এখনও কোনো অর্ডার নেই। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
+const row=o=>`<article class="ord"><div class="oh"><b>${esc(o.id)}</b><span class="st">${esc(o.st)}</span></div><small>${esc(fd(o.date))}</small><ul>${o.lines.map(l=>`<li>${esc(l.e||"")} ${esc(l.n)} × ${bn(l.q)}</li>`).join("")}</ul><div class="ot">মোট: ${tk(o.total)}</div></article>`;
+async function orders(){
+  const box=$("ords");
+  let local=Mela.orders().slice().reverse().map(o=>({id:o.id,st:o.status||"প্রক্রিয়াধীন",date:o.date,total:o.total,lines:o.lines||[]}));
+  const none='<p class="empty">এখনও কোনো অর্ডার নেই। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
+  let html="";
+  if(Mela.session()){
+    try{
+      const L=await Mela.myOrders(),ids=new Set(L.map(o=>o.id));
+      html=L.map(o=>row({id:o.id,st:Mela.STATUS[o.status]||o.status,date:o.created_at,total:o.total,lines:(o.order_items||[]).map(i=>({e:i.emoji,n:i.name,q:i.qty}))})).join("");
+      local=local.filter(o=>!ids.has(o.id));
+      if(local.length)html+="<h3>এই ব্রাউজারে লগইন ছাড়া দেওয়া অর্ডার</h3>"+local.map(o=>row(o)).join("");
+      box.innerHTML=html||none;return;
+    }catch(e){
+      html='<p class="note" style="color:var(--red)">সার্ভার থেকে অর্ডার আনা যায়নি। এই ব্রাউজারের তালিকা দেখানো হচ্ছে।</p>';
+    }
+  }
+  box.innerHTML=html+(local.length?local.map(o=>row(o)).join(""):none);
 }
-$("f").onsubmit=e=>{e.preventDefault();Mela.setUser({name:$("nm").value.trim(),phone:$("ph").value.trim(),addr:$("ad").value.trim()});Mela.toast("তথ্য সংরক্ষণ হয়েছে")};
-$("clr").onclick=()=>{try{localStorage.removeItem("mela_user")}catch(e){}fill();Mela.toast("সংরক্ষিত তথ্য মুছে ফেলা হয়েছে")};
-fill();orders();
+function view(){
+  const s=Mela.session();
+  $("auth").hidden=!!s;$("me").hidden=!s;
+  if(s)$("who").textContent=(s.user&&s.user.email)||"";
+  $("pnote").textContent=s?"আপনার তথ্য আপনার অ্যাকাউন্টে সংরক্ষিত থাকে, সব ডিভাইসে পাবেন।":"এই তথ্য শুধু এই ব্রাউজারে থাকে, চেকআউটে ঠিকানা বসাতে কাজে লাগে। লগইন করলে সব ডিভাইসে পাবেন।";
+  fill();orders();
+}
+
+/* login / sign up / reset */
+$("af").onsubmit=async e=>{
+  e.preventDefault();busy(true);
+  try{await Mela.signIn($("em").value.trim(),$("pw").value);say("");$("pw").value="";view()}
+  catch(err){say(nice(err.message),true)}
+  busy(false);
+};
+$("su").onclick=async()=>{
+  if(!$("af").reportValidity())return;busy(true);
+  try{
+    const ok=await Mela.signUp($("em").value.trim(),$("pw").value);
+    $("pw").value="";
+    if(ok){say("");view()}else say("আপনার ইমেইলে যাচাইয়ের লিংক পাঠানো হয়েছে। লিংকে চাপ দিয়ে তারপর লগইন করুন।");
+  }catch(err){say(nice(err.message),true)}
+  busy(false);
+};
+$("fp").onclick=async()=>{
+  const em=$("em");
+  if(!em.value||!em.checkValidity()){say("আগে উপরে আপনার ইমেইল লিখুন।",true);em.focus();return}
+  busy(true);
+  try{await Mela.recover(em.value.trim());say("ইমেইলটি নিবন্ধিত থাকলে পাসওয়ার্ড বদলানোর লিংক পাঠানো হয়েছে।")}
+  catch(err){say(nice(err.message),true)}
+  busy(false);
+};
+$("lo").onclick=()=>{Mela.signOut();say("লগ আউট হয়েছে।");view()};
+
+/* saved delivery details */
+$("f").onsubmit=async e=>{
+  e.preventDefault();
+  const d={name:$("nm").value.trim(),phone:$("ph").value.trim(),addr:$("ad").value.trim()};
+  try{await Mela.saveProfile(d);Mela.toast("তথ্য সংরক্ষণ হয়েছে")}
+  catch(err){Mela.toast("এই ব্রাউজারে সংরক্ষিত, অ্যাকাউন্টে যায়নি")}
+};
+$("clr").onclick=async()=>{
+  try{await Mela.saveProfile({name:"",phone:"",addr:""})}catch(err){}
+  try{localStorage.removeItem("mela_user")}catch(err){}
+  fill();Mela.toast("সংরক্ষিত তথ্য মুছে ফেলা হয়েছে");
+};
+
+/* password-reset link: the token arrives in the #hash */
+const hp=new URLSearchParams(location.hash.slice(1));
+if(hp.get("error_description"))say("লিংকটির মেয়াদ শেষ বা আগেই ব্যবহার হয়েছে। আবার \"পাসওয়ার্ড ভুলে গেছেন\" চাপুন।",true);
+if(hp.get("type")==="recovery"&&hp.get("access_token"))$("rec").hidden=false;
+$("rf").onsubmit=async e=>{
+  e.preventDefault();
+  try{
+    await Mela.updatePassword(hp.get("access_token"),$("np").value);
+    history.replaceState(null,"",location.pathname+location.search);
+    $("rec").hidden=true;$("np").value="";say("পাসওয়ার্ড বদলেছে। এখন লগইন করুন।");
+  }catch(err){say(nice(err.message),true)}
+};
+view();
 </script></body></html>

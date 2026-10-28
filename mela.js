@@ -26,6 +26,7 @@ const P=[
  {id:14,n:"তালপাখা",c:"home",p:90,e:"🪭",d:"বিদ্যুৎ ছাড়াই বাতাস, গরমের বন্ধু।"}
 ];
 const VAR=[{n:"সাধারণ",x:0},{n:"উপহার প্যাক",x:60}];
+const STATUS={pending:"প্রক্রিয়াধীন",shipped:"পাঠানো হয়েছে",delivered:"পৌঁছেছে",cancelled:"বাতিল"};
 
 const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
 const $=id=>document.getElementById(id);
@@ -36,11 +37,80 @@ const params=()=>new URLSearchParams(location.search);
 /* localStorage helpers */
 const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const set=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const del=k=>{try{localStorage.removeItem(k)}catch(e){}};
+
+/* orders and saved customer details (browser copy; logged-in customers also keep them in their account) */
+const orders=()=>get("mela_orders",[]);
+const addOrder=o=>set("mela_orders",[...orders(),o]);
+const user=()=>get("mela_user",null);
+const setUser=u=>set("mela_user",u);
 
 /* ---- Supabase (public URL + publishable key; access rules live in the database) ---- */
 const SB={url:"https://gjawsgadcwqlohvfakzp.supabase.co",key:"sb_publishable_Yj2bClV0p5p9y2bxRpJ3Xw_ONx64AcF"};
+
+/* ---- customer accounts: Supabase Auth over plain fetch ---- */
+const SESSION_KEY="mela_session";
+const session=()=>get(SESSION_KEY,null);
+const loggedIn=()=>!!session();
+async function auth(path,body,tok,method){
+  const r=await fetch(SB.url+"/auth/v1/"+path,{
+    method:method||"POST",
+    headers:{apikey:SB.key,"Content-Type":"application/json",...(tok?{Authorization:"Bearer "+tok}:{})},
+    body:body?JSON.stringify(body):undefined
+  });
+  const j=await r.json().catch(()=>null);
+  if(!r.ok)throw new Error((j&&(j.msg||j.error_description||j.message||j.error))||"auth failed");
+  return j;
+}
+function saveSession(j){
+  if(!j||!j.access_token)return null;
+  const old=session(),u=j.user||(old&&old.user)||{};
+  const s={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1000)+(j.expires_in||3600),
+    user:{id:u.id,email:u.email,meta:u.user_metadata||u.meta||{}}};
+  set(SESSION_KEY,s);return s;
+}
+/* saved delivery details live in the account's user_metadata */
+function applyMeta(m){if(m&&(m.full_name||m.mobile||m.address))setUser({name:m.full_name||"",phone:m.mobile||"",addr:m.address||""})}
+let refreshing=null;
+function token(){
+  const s=session();if(!s)return Promise.resolve(null);
+  if(s.expires_at-60>Date.now()/1000)return Promise.resolve(s.access_token);
+  if(!refreshing)refreshing=auth("token?grant_type=refresh_token",{refresh_token:s.refresh_token})
+    .then(j=>{const n=saveSession(j);return n?n.access_token:null})
+    .catch(()=>{del(SESSION_KEY);return null})
+    .finally(()=>{refreshing=null});
+  return refreshing;
+}
+/* returns true when logged in, false when the email must be confirmed first */
+async function signUp(email,password){
+  const s=saveSession(await auth("signup",{email,password}));
+  if(s)applyMeta(s.user.meta);
+  return !!s;
+}
+async function signIn(email,password){
+  const s=saveSession(await auth("token?grant_type=password",{email,password}));
+  if(!s)throw new Error("auth failed");
+  applyMeta(s.user.meta);
+}
+function signOut(){
+  const s=session();del(SESSION_KEY);del("mela_user");
+  if(s)auth("logout",null,s.access_token).catch(()=>{});
+}
+const recover=email=>auth("recover",{email});
+const updatePassword=(tok,password)=>auth("user",{password},tok,"PUT");
+async function saveProfile(d){
+  setUser(d);
+  if(!session())return;
+  const t=await token();if(!t)return;
+  const j=await auth("user",{data:{full_name:d.name,mobile:d.phone,address:d.addr}},t,"PUT");
+  const s=session();if(s){s.user={id:j.id,email:j.email,meta:j.user_metadata||{}};set(SESSION_KEY,s)}
+}
+/* password-reset emails land on the site's address with a token in the #hash: forward to the account page */
+if(/type=recovery/.test(location.hash)&&!/account\.html$/.test(location.pathname))location.replace("account.html"+location.hash);
+
 async function sb(path,opt={}){
-  const r=await fetch(SB.url+"/rest/v1/"+path,{...opt,headers:{apikey:SB.key,"Content-Type":"application/json",...(opt.headers||{})}});
+  const t=await token();
+  const r=await fetch(SB.url+"/rest/v1/"+path,{...opt,headers:{apikey:SB.key,"Content-Type":"application/json",...(t?{Authorization:"Bearer "+t}:{}),...(opt.headers||{})}});
   const j=await r.json().catch(()=>null);
   if(!r.ok)throw new Error((j&&(j.message||j.error))||"request failed");
   return j;
@@ -69,11 +139,14 @@ function load(){
   return loading;
 }
 
-/* place an order: the server recomputes every price, so the browser cannot change them */
+/* place an order: the server recomputes every price, so the browser cannot change them.
+   When a customer is logged in the order is linked to their account. */
 function placeOrder(d,lines){
   const items=lines.map(l=>{const [id,vi]=l.k.split(":");return{id:+id,qty:l.q,gift:+vi>0}});
   return sb("rpc/place_order",{method:"POST",body:JSON.stringify({p_name:d.name,p_phone:d.phone,p_address:d.addr,p_items:items})});
 }
+/* the logged-in customer's own orders (the database only returns their own rows) */
+const myOrders=()=>sb("orders?select=id,total,status,created_at,order_items(name,emoji,unit_price,qty)&order=created_at.desc&limit=50");
 
 /* cart: lines [{k:"id:variant",n,e,pr,q}] under mela_cart */
 const cartLines=()=>get("mela_cart",[]).filter(l=>l.q>0);
@@ -90,12 +163,6 @@ function addToCart(id,vi=0,q=1){
 const wish=()=>get("mela_wish",[]);
 const isWish=id=>wish().includes(+id);
 function toggleWish(id){id=+id;let w=wish();const on=!w.includes(id);w=on?[...w,id]:w.filter(x=>x!==id);set("mela_wish",w);return on}
-
-/* orders and saved customer details (browser copy; real accounts come next) */
-const orders=()=>get("mela_orders",[]);
-const addOrder=o=>set("mela_orders",[...orders(),o]);
-const user=()=>get("mela_user",null);
-const setUser=u=>set("mela_user",u);
 
 function toast(t){
   let el=$("toast");
@@ -126,5 +193,5 @@ function bindGrid(el,after){
   });
 }
 
-return{CATS,P,VAR,bn,tk,$,esc,tone,params,get,set,load,placeOrder,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,params,get,set,load,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
 })();
