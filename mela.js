@@ -1,5 +1,6 @@
 /* মেলা — shared data and helpers (plain browser JS, no build step) */
 const Mela=(()=>{
+/* built-in starter catalogue: used until (or if) the Supabase copy can be loaded */
 const CATS=[
  {id:"all",n:"সব দোকান",e:"🎪",c:"#f4a300"},
  {id:"cloth",n:"শাড়ি ও পোশাক",e:"🥻",c:"#f28ba0"},
@@ -36,6 +37,44 @@ const params=()=>new URLSearchParams(location.search);
 const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
 const set=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 
+/* ---- Supabase (public URL + publishable key; access rules live in the database) ---- */
+const SB={url:"https://gjawsgadcwqlohvfakzp.supabase.co",key:"sb_publishable_Yj2bClV0p5p9y2bxRpJ3Xw_ONx64AcF"};
+async function sb(path,opt={}){
+  const r=await fetch(SB.url+"/rest/v1/"+path,{...opt,headers:{apikey:SB.key,"Content-Type":"application/json",...(opt.headers||{})}});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok)throw new Error((j&&(j.message||j.error))||"request failed");
+  return j;
+}
+
+/* catalogue: built-in fallback -> cached copy -> fresh copy from the database.
+   The arrays are updated in place, so pages that destructured CATS/P keep working. */
+function applyCatalog(cs,ps){CATS.splice(1,CATS.length,...cs);P.splice(0,P.length,...ps)}
+const cached=get("mela_catalog",null);
+if(cached&&Array.isArray(cached.CATS)&&Array.isArray(cached.P)&&cached.P.length)applyCatalog(cached.CATS,cached.P);
+let loading=null;
+function load(){
+  if(loading)return loading;
+  loading=Promise.all([
+    sb("categories?select=id,name,emoji,color&order=sort"),
+    sb("products?select=id,name,category_id,price,emoji,description&active=eq.true&order=id")
+  ]).then(([cs,ps])=>{
+    if(!cs.length||!ps.length)return false;
+    applyCatalog(
+      cs.map(c=>({id:c.id,n:c.name,e:c.emoji||"🏷️",c:c.color||"#f4a300"})),
+      ps.map(p=>({id:p.id,n:p.name,c:p.category_id,p:p.price,e:p.emoji||"🛍️",d:p.description||""}))
+    );
+    set("mela_catalog",{CATS:CATS.slice(1),P:P.slice()});
+    return true;
+  }).catch(()=>false);
+  return loading;
+}
+
+/* place an order: the server recomputes every price, so the browser cannot change them */
+function placeOrder(d,lines){
+  const items=lines.map(l=>{const [id,vi]=l.k.split(":");return{id:+id,qty:l.q,gift:+vi>0}});
+  return sb("rpc/place_order",{method:"POST",body:JSON.stringify({p_name:d.name,p_phone:d.phone,p_address:d.addr,p_items:items})});
+}
+
 /* cart: lines [{k:"id:variant",n,e,pr,q}] under mela_cart */
 const cartLines=()=>get("mela_cart",[]).filter(l=>l.q>0);
 const cartCount=()=>cartLines().reduce((s,l)=>s+l.q,0);
@@ -52,7 +91,7 @@ const wish=()=>get("mela_wish",[]);
 const isWish=id=>wish().includes(+id);
 function toggleWish(id){id=+id;let w=wish();const on=!w.includes(id);w=on?[...w,id]:w.filter(x=>x!==id);set("mela_wish",w);return on}
 
-/* orders and saved customer details (browser only until phase 2) */
+/* orders and saved customer details (browser copy; real accounts come next) */
 const orders=()=>get("mela_orders",[]);
 const addOrder=o=>set("mela_orders",[...orders(),o]);
 const user=()=>get("mela_user",null);
@@ -87,5 +126,5 @@ function bindGrid(el,after){
   });
 }
 
-return{CATS,P,VAR,bn,tk,$,esc,tone,params,get,set,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,bn,tk,$,esc,tone,params,get,set,load,placeOrder,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
 })();

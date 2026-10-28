@@ -5,14 +5,16 @@
 <h2>ডেলিভারির ঠিকানা</h2>
 <form id="f"><label for="nm">নাম</label><input id="nm" required autocomplete="name">
 <label for="ph">মোবাইল নম্বর</label><input id="ph" required inputmode="numeric" pattern="01[3-9][0-9]{8}" title="১১ সংখ্যার বাংলাদেশি নম্বর, যেমন 017XXXXXXXX" autocomplete="tel">
-<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required autocomplete="street-address"></textarea>
+<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required minlength="5" autocomplete="street-address"></textarea>
 <label class="chk"><input type="checkbox" id="sv" checked> পরের বার জন্য আমার তথ্য এই ব্রাউজারে মনে রাখুন</label>
+<p class="note" id="err" role="alert" style="color:var(--red)"></p>
 <button class="btn" id="go" type="submit">অর্ডার নিশ্চিত করুন (ক্যাশ অন ডেলিভারি)</button></form></main>
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
-const {$,bn,tk,esc}=Mela;Mela.header("cart");
+const {P,VAR,$,bn,tk,esc}=Mela;Mela.header("cart");
 let L=Mela.cartLines();
+const LABEL="অর্ডার নিশ্চিত করুন (ক্যাশ অন ডেলিভারি)";
 const fee=s=>s&&s<2000?60:0;
 const u=Mela.user();if(u){$("nm").value=u.name||"";$("ph").value=u.phone||"";$("ad").value=u.addr||""}
 function draw(){
@@ -21,15 +23,30 @@ function draw(){
   $("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
   $("sub").textContent=tk(sub);$("ship").textContent=sh?tk(sh):"বিনামূল্যে";$("tot").textContent=tk(sub+sh);$("go").disabled=!L.length;
 }
+/* keep cart prices equal to the shop's current prices; drop products that no longer exist */
+function sync(){
+  L=L.filter(l=>P.some(p=>p.id==l.k.split(":")[0]));
+  L.forEach(l=>{const [i,v]=l.k.split(":"),p=P.find(x=>x.id==i);l.pr=p.p+(VAR[+v]||VAR[0]).x});
+  draw();
+}
 $("lines").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;if(m!==undefined)L[m].q--;if(p!==undefined)L[p].q++;draw()};
-$("f").onsubmit=e=>{
+$("f").onsubmit=async e=>{
   e.preventDefault();if(!L.length)return;
-  const sub=L.reduce((s,l)=>s+l.pr*l.q,0);
-  const o={id:"M"+String(Date.now()).slice(-7),name:$("nm").value.trim(),phone:$("ph").value.trim(),addr:$("ad").value.trim(),lines:L,total:sub+fee(sub),date:new Date().toISOString(),status:"প্রক্রিয়াধীন"};
-  Mela.addOrder(o);Mela.set("mela_order",o);
-  if($("sv").checked)Mela.setUser({name:o.name,phone:o.phone,addr:o.addr});
-  try{localStorage.removeItem("mela_cart")}catch(err){}
-  location.href="order-placed.html";
+  const btn=$("go"),msg=$("err");
+  btn.disabled=true;btn.textContent="অর্ডার পাঠানো হচ্ছে…";msg.textContent="";
+  const d={name:$("nm").value.trim(),phone:$("ph").value.trim(),addr:$("ad").value.trim()};
+  try{
+    const r=await Mela.placeOrder(d,L);
+    const o={id:r.id,name:d.name,phone:d.phone,addr:d.addr,lines:L,total:r.total,date:new Date().toISOString(),status:"প্রক্রিয়াধীন"};
+    Mela.addOrder(o);Mela.set("mela_order",o);
+    if($("sv").checked)Mela.setUser(d);
+    try{localStorage.removeItem("mela_cart")}catch(err){}
+    location.href="order-placed.html";
+  }catch(err){
+    msg.textContent="অর্ডার পাঠানো যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।"+(/product not found/.test(err.message)?" (কোনো পণ্য আর পাওয়া যাচ্ছে না, কার্ট থেকে সরিয়ে দিন।)":"");
+    btn.disabled=false;btn.textContent=LABEL;
+  }
 };
-draw();
+sync();
+Mela.load().then(ok=>{if(ok)sync()});
 </script></body></html>

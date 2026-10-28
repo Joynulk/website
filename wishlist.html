@@ -12,4 +12,5 @@ function render(){
 }
 Mela.bindGrid($("grid"),render);
 render();
+Mela.load().then(ok=>{if(ok)render()});
 </script></body></html>

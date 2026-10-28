@@ -14,9 +14,13 @@
 <script>
 const {CATS,P,$,bn}=Mela;Mela.header("shop");
 const u=Mela.params();
-let cat=CATS.some(c=>c.id===u.get("c"))?u.get("c"):"all";
+let cat="all",pending=u.get("c");
 $("q").value=u.get("q")||"";
-$("chips").innerHTML=CATS.map(c=>`<button class="chip" data-c="${c.id}">${c.e} ${c.n}</button>`).join("");
+function chips(){
+  if(pending&&CATS.some(c=>c.id===pending)){cat=pending;pending=null}
+  if(!CATS.some(c=>c.id===cat))cat="all";
+  $("chips").innerHTML=CATS.map(c=>`<button class="chip" data-c="${c.id}">${c.e} ${c.n}</button>`).join("");
+}
 function render(){
   const t=$("q").value.trim(),[lo,hi]=($("pf").value||"0-99999").split("-").map(Number),so=$("so").value;
   const L=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(t)&&p.p>=lo&&p.p<hi);
@@ -27,8 +31,9 @@ function render(){
   $("cnt").textContent=bn(L.length)+"টি পণ্য";
   $("grid").innerHTML=L.length?L.map(p=>Mela.card(p)).join(""):'<div class="empty">কোনো পণ্য পাওয়া যায়নি। ফিল্টার বদলে দেখুন।</div>';
 }
-$("chips").onclick=e=>{const b=e.target.closest("[data-c]");if(b){cat=b.dataset.c;render()}};
+$("chips").onclick=e=>{const b=e.target.closest("[data-c]");if(b){pending=null;cat=b.dataset.c;render()}};
 $("q").oninput=render;$("so").onchange=render;$("pf").onchange=render;
 Mela.bindGrid($("grid"));
-render();
+chips();render();
+Mela.load().then(ok=>{if(ok){chips();render()}});
 </script></body></html>

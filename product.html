@@ -5,13 +5,18 @@
 <script src="mela.js"></script>
 <script>
 const {CATS,P,VAR,$,bn,tk,tone}=Mela;Mela.header("shop");
-const p=P.find(x=>x.id===+Mela.params().get("id"));
-if(!p){
+const pid=+Mela.params().get("id");
+let sig="";
+function missing(){
   $("pg").innerHTML='<p class="empty">পণ্যটি পাওয়া যায়নি। <a href="shop.html">দোকানে ফিরুন</a></p>';
   document.title="পণ্য নেই — মেলা";
-}else{
+}
+/* builds the page; returns false when the product is not known yet */
+function show(){
+  const p=P.find(x=>x.id===pid);if(!p)return false;
+  const s=JSON.stringify(p);if(s===sig)return true;sig=s;
   document.title=p.n+" — মেলা";
-  const cat=CATS.find(c=>c.id===p.c);let vi=0,qty=1;
+  const cat=CATS.find(c=>c.id===p.c)||{n:"দোকান"};let vi=0,qty=1;
   $("pg").innerHTML=`<nav class="crumb" aria-label="পথ"><a href="index.html">হোম</a> › <a href="shop.html?c=${p.c}">${cat.n}</a> › ${p.n}</nav>
 <div class="pd"><div class="pimg" style="background:${tone(p.c)}66" aria-hidden="true">${p.e}</div>
 <div class="pinfo"><h1>${p.n}</h1><div class="pprice" id="pp"></div><p>${p.d}</p>
@@ -35,5 +40,8 @@ if(!p){
   const rel=P.filter(x=>x.c===p.c&&x.id!==p.id).slice(0,4);
   if(rel.length){$("rel").innerHTML=rel.map(x=>Mela.card(x)).join("");Mela.bindGrid($("rel"))}else $("rw").hidden=true;
   paint();wpaint();
+  return true;
 }
+if(show())Mela.load().then(()=>show());
+else Mela.load().then(()=>{if(!show())missing()});
 </script></body></html>

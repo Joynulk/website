@@ -118,20 +118,23 @@ footer a{color:var(--mute);margin:0 6px}
 const {CATS,P,VAR}=Mela;
 const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
 const $=id=>document.getElementById(id);
-const tone=id=>CATS.find(x=>x.id===id).c;
+const tone=Mela.tone;
 let cat="all",term="",cart={},cur=0;
 
-/* 3D ring of stalls */
-const ring=$("ring"),N=CATS.length,R=Math.round(95/Math.tan(Math.PI/N))+30;
-CATS.forEach((c,i)=>{
-  const s=document.createElement("button");s.className="stall";s.style.background=c.c;
-  s.style.transform=`rotateY(${i*360/N}deg) translateZ(${R}px)`;
-  s.innerHTML=`<div><b>${c.e}</b><span>${c.n}</span></div>`;
-  s.onclick=()=>{go(i);setCat(c.id)};ring.appendChild(s);
-});
+/* 3D ring of stalls (rebuilt if the shop's categories change) */
+const ring=$("ring");let N=0,R=0;
+function buildRing(){
+  ring.innerHTML="";N=CATS.length;R=Math.round(95/Math.tan(Math.PI/N))+30;
+  CATS.forEach((c,i)=>{
+    const s=document.createElement("button");s.className="stall";s.style.background=c.c;
+    s.style.transform=`rotateY(${i*360/N}deg) translateZ(${R}px)`;
+    s.innerHTML=`<div><b>${c.e}</b><span>${c.n}</span></div>`;
+    s.onclick=()=>{go(i);setCat(c.id)};ring.appendChild(s);
+  });
+}
 function go(i){cur=i;ring.style.transform=`translateZ(${-R}px) rotateY(${-i*360/N}deg)`}
 $("next").onclick=()=>go(cur+1);$("prev").onclick=()=>go(cur-1);
-go(0);
+buildRing();go(0);
 let sx=null;
 $("stage").addEventListener("pointerdown",e=>sx=e.clientX);
 addEventListener("pointerup",e=>{if(sx!==null&&Math.abs(e.clientX-sx)>40)go(cur+(e.clientX<sx?1:-1));sx=null});
@@ -140,8 +143,10 @@ if(!matchMedia("(prefers-reduced-motion:reduce)").matches)setInterval(()=>{if(!d
 /* grid */
 function setCat(id){cat=id;render();$("grid").scrollIntoView({block:"start"})}
 function render(anim){
+  if(!CATS.some(c=>c.id===cat))cat="all";
+  const cc=CATS.find(c=>c.id===cat);
   const list=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(term.trim()));
-  $("title").textContent=CATS.find(c=>c.id===cat).n==="সব দোকান"?"সব পণ্য":CATS.find(c=>c.id===cat).n;
+  $("title").textContent=cat==="all"?"সব পণ্য":cc.n;
   $("count").textContent=bn(list.length)+"টি পণ্য";
   $("allp").href="shop.html"+(cat==="all"?"":"?c="+cat);
   $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id);return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${p.id}" aria-label="${p.n} বিস্তারিত">${p.e}</button><button class="hrt" data-w="${p.id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${p.n}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`}).join(""):`<div class="empty">"${term}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
@@ -189,8 +194,9 @@ $("mb").onclick=()=>{add(cp.id+":"+vi,qty);$("mb").textContent="যোগ হয
 /* cart */
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1600)}
 function add(k,q=1){const cb=$("cartBtn");cb.classList.remove("bump");void cb.offsetWidth;cb.classList.add("bump");cart[k]=(cart[k]||0)+q;draw();toast(lp(k).p.n+" কার্টে যোগ হয়েছে")}
+const live=()=>Object.keys(cart).filter(k=>cart[k]>0&&P.some(x=>x.id==k.split(":")[0]));
 function draw(){
-  const ids=Object.keys(cart).filter(k=>cart[k]>0);
+  const ids=live();
   $("cnt").textContent=bn(ids.reduce((s,k)=>s+cart[k],0));
   $("total").textContent=tk(ids.reduce((s,k)=>s+cart[k]*lp(k).pr,0));
   $("items").innerHTML=ids.length?ids.map(k=>{const L=lp(k),p=L.p;
@@ -200,10 +206,14 @@ $("items").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;
   if(m)cart[m]--;if(p)cart[p]++;draw()};
 $("cartBtn").onclick=()=>$("drawer").classList.add("open");
 $("cx").onclick=()=>$("drawer").classList.remove("open");
-$("buy").onclick=()=>{if(!Object.values(cart).some(v=>v>0)){toast("আগে কার্টে পণ্য যোগ করুন");return}location.href="cart.html"};
+$("buy").onclick=()=>{if(!live().length){toast("আগে কার্টে পণ্য যোগ করুন");return}location.href="cart.html"};
 try{JSON.parse(localStorage.getItem("mela_cart")||"[]").forEach(l=>cart[l.k]=l.q)}catch(e){}
-const d0=draw;draw=function(){d0();try{localStorage.setItem("mela_cart",JSON.stringify(Object.keys(cart).filter(k=>cart[k]>0).map(k=>{const L=lp(k);return{k,n:L.p.n+L.vn,e:L.p.e,pr:L.pr,q:cart[k]}})))}catch(e){}};
+const d0=draw;draw=function(){d0();try{localStorage.setItem("mela_cart",JSON.stringify(live().map(k=>{const L=lp(k);return{k,n:L.p.n+L.vn,e:L.p.e,pr:L.pr,q:cart[k]}})))}catch(e){}};
 render();draw();
+
+/* fresh catalogue from the database */
+const csig=()=>JSON.stringify(CATS),c0=csig();
+Mela.load().then(ok=>{if(!ok)return;if(csig()!==c0){buildRing();go(0)}render();draw()});
 </script>
 </body>
 </html>
