@@ -8,17 +8,18 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 - `wishlist.html` — saved products
 - `cart.html` — cart review + delivery form (cash on delivery); the order is saved in Supabase
 - `order-placed.html` — order confirmation
-- `account.html` — saved customer details and order history (this browser)
+- `account.html` — customer login (email + password), password reset, saved delivery details, order history
 
 ## Shared files
-- `mela.js` — catalogue loading, Supabase calls, cart, wishlist, orders, header and card helpers (global `Mela`)
+- `mela.js` — catalogue loading, Supabase calls, customer login, cart, wishlist, orders, header and card helpers (global `Mela`)
 - `mela.css` — styles for every page except `index.html`, which keeps its own inline styles
 - `supabase/schema.sql` — tables, access rules, `place_order` function and starter data (already applied to the project)
+- `supabase/migrations/` — later database changes, one file each (already applied)
 
 ## How data flows
 - Products and categories are read from Supabase. A built-in copy in `mela.js` shows first, and the last downloaded copy is cached in the browser.
-- Checkout calls the `place_order` database function. It recomputes every price on the server, so prices sent from the browser are ignored.
-- Cart, wishlist and saved details stay in the browser's localStorage: `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`, `mela_catalog`.
+- Checkout calls the `place_order` database function. It recomputes every price on the server, so prices sent from the browser are ignored. Logged-in customers' orders are linked to their account; ordering without login still works.
+- Cart and wishlist stay in the browser's localStorage: `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`, `mela_catalog`, and `mela_session` while logged in.
 - The Supabase URL and publishable key in `mela.js` are public by design. Access is limited by the row level security rules in `schema.sql`. Never put a `service_role` or secret key in this repo.
 
 ## Docs (`Doc/`)
@@ -30,6 +31,7 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 6. [`6.security.md`](Doc/6.security.md) — security checklist and status
 7. [`7.testing.md`](Doc/7.testing.md) — test plan (nothing has been run yet)
 8. [`8.deployment.md`](Doc/8.deployment.md) — environments, changes, rollback, backups, go-live checklist
+9. [`9.auth.md`](Doc/9.auth.md) — customer login design, Supabase settings to change, login tests
 
 ## Next
-Real customer login, then an admin panel for the shop owner (products, orders, status).
+Admin panel for the shop owner (products, orders, status).
