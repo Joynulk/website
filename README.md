@@ -32,6 +32,7 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 7. [`7.testing.md`](Doc/7.testing.md) — test plan (nothing has been run yet)
 8. [`8.deployment.md`](Doc/8.deployment.md) — environments, changes, rollback, backups, go-live checklist
 9. [`9.auth.md`](Doc/9.auth.md) — customer login design, Supabase settings to change, login tests
+- [`Boundary.md`](Doc/Boundary.md) — known limits to fix before launch or before the admin panel
 
 ## Next
 Admin panel for the shop owner (products, orders, status).
