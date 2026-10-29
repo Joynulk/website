@@ -9,6 +9,7 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 - `cart.html` — cart review + delivery form (cash on delivery); the order is saved in Supabase
 - `order-placed.html` — order confirmation
 - `account.html` — customer login (email + password), password reset, saved delivery details, order history
+- `admin.html` — shop owner panel: orders and their status, products, categories (only accounts listed in the `admins` table get in)
 
 ## Shared files
 - `mela.js` — catalogue loading, Supabase calls, customer login, cart, wishlist, orders, header and card helpers (global `Mela`)
@@ -19,6 +20,7 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 ## How data flows
 - Products and categories are read from Supabase. A built-in copy in `mela.js` shows first, and the last downloaded copy is cached in the browser.
 - Checkout calls the `place_order` database function. It recomputes every price on the server, so prices sent from the browser are ignored. Logged-in customers' orders are linked to their account; ordering without login still works.
+- After an order is created only its status can change, and only along allowed steps (pending -> shipped -> delivered, or cancelled); each change is logged in `order_events`.
 - Cart and wishlist stay in the browser's localStorage: `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`, `mela_catalog`, and `mela_session` while logged in.
 - The Supabase URL and publishable key in `mela.js` are public by design. Access is limited by the row level security rules in `schema.sql`. Never put a `service_role` or secret key in this repo.
 
@@ -32,7 +34,8 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 7. [`7.testing.md`](Doc/7.testing.md) — test plan (nothing has been run yet)
 8. [`8.deployment.md`](Doc/8.deployment.md) — environments, changes, rollback, backups, go-live checklist
 9. [`9.auth.md`](Doc/9.auth.md) — customer login design, Supabase settings to change, login tests
-- [`Boundary.md`](Doc/Boundary.md) — known limits to fix before launch or before the admin panel
+10. [`10.admin.md`](Doc/10.admin.md) — admin panel, first admin, order status rules, checks done and still to do
+- [`Boundary.md`](Doc/Boundary.md) — known limits to fix before launch
 
 ## Next
-Admin panel for the shop owner (products, orders, status).
+Phase E: stock checks, duplicate-order protection, spam limit.
