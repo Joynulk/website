@@ -12,14 +12,14 @@
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
-const {CATS,P,$,bn}=Mela;Mela.header("shop");
+const {CATS,P,$,bn,esc}=Mela;Mela.header("shop");
 const u=Mela.params();
 let cat="all",pending=u.get("c");
 $("q").value=u.get("q")||"";
 function chips(){
   if(pending&&CATS.some(c=>c.id===pending)){cat=pending;pending=null}
   if(!CATS.some(c=>c.id===cat))cat="all";
-  $("chips").innerHTML=CATS.map(c=>`<button class="chip" data-c="${c.id}">${c.e} ${c.n}</button>`).join("");
+  $("chips").innerHTML=CATS.map(c=>`<button class="chip" data-c="${esc(c.id)}">${esc(c.e)} ${esc(c.n)}</button>`).join("");
 }
 function render(){
   const t=$("q").value.trim(),[lo,hi]=($("pf").value||"0-99999").split("-").map(Number),so=$("so").value;

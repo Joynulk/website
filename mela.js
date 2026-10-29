@@ -30,8 +30,11 @@ const STATUS={pending:"প্রক্রিয়াধীন",shipped:"পা�
 
 const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
 const $=id=>document.getElementById(id);
-const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const tone=id=>(CATS.find(c=>c.id===id)||CATS[0]).c;
+/* every piece of shop data (names, descriptions, emoji) is escaped before it goes into innerHTML */
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* colours from the database must look like #rrggbb, anything else falls back to gold */
+const col=c=>/^#[0-9a-fA-F]{6}$/.test(c)?c:"#f4a300";
+const tone=id=>col((CATS.find(c=>c.id===id)||CATS[0]).c);
 const params=()=>new URLSearchParams(location.search);
 
 /* localStorage helpers */
@@ -115,6 +118,8 @@ async function sb(path,opt={}){
   if(!r.ok)throw new Error((j&&(j.message||j.error))||"request failed");
   return j;
 }
+/* true only when the logged-in account is in the admins table (the database decides, not the page) */
+const isAdmin=()=>sb("rpc/is_admin",{method:"POST",body:"{}"}).then(r=>r===true);
 
 /* catalogue: built-in fallback -> cached copy -> fresh copy from the database.
    The arrays are updated in place, so pages that destructured CATS/P keep working. */
@@ -182,8 +187,8 @@ function header(active){
 
 /* product card used by shop, wishlist and product pages */
 function card(p){
-  const w=isWish(p.id);
-  return `<article class="p"><a class="ph" href="product.html?id=${p.id}" style="background:${tone(p.c)}55" aria-label="${p.n} বিস্তারিত">${p.e}</a><button class="hrt${w?" on":""}" data-w="${p.id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${p.id}">${p.n}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`;
+  const w=isWish(p.id),id=+p.id;
+  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}">কার্টে যোগ করুন</button></div></article>`;
 }
 function bindGrid(el,after){
   el.addEventListener("click",e=>{
@@ -193,5 +198,5 @@ function bindGrid(el,after){
   });
 }
 
-return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,params,get,set,load,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,params,get,set,load,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
 })();

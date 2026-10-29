@@ -118,7 +118,7 @@ footer a{color:var(--mute);margin:0 6px}
 const {CATS,P,VAR}=Mela;
 const bn=n=>Number(n).toLocaleString("bn-BD"),tk=n=>"৳"+bn(n);
 const $=id=>document.getElementById(id);
-const tone=Mela.tone;
+const tone=Mela.tone,esc=Mela.esc;
 let cat="all",term="",cart={},cur=0;
 
 /* 3D ring of stalls (rebuilt if the shop's categories change) */
@@ -128,7 +128,7 @@ function buildRing(){
   CATS.forEach((c,i)=>{
     const s=document.createElement("button");s.className="stall";s.style.background=c.c;
     s.style.transform=`rotateY(${i*360/N}deg) translateZ(${R}px)`;
-    s.innerHTML=`<div><b>${c.e}</b><span>${c.n}</span></div>`;
+    s.innerHTML=`<div><b>${esc(c.e)}</b><span>${esc(c.n)}</span></div>`;
     s.onclick=()=>{go(i);setCat(c.id)};ring.appendChild(s);
   });
 }
@@ -148,8 +148,8 @@ function render(anim){
   const list=P.filter(p=>(cat==="all"||p.c===cat)&&p.n.includes(term.trim()));
   $("title").textContent=cat==="all"?"সব পণ্য":cc.n;
   $("count").textContent=bn(list.length)+"টি পণ্য";
-  $("allp").href="shop.html"+(cat==="all"?"":"?c="+cat);
-  $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id);return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${p.id}" aria-label="${p.n} বিস্তারিত">${p.e}</button><button class="hrt" data-w="${p.id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${p.n}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${p.id}">কার্টে যোগ করুন</button></div></article>`}).join(""):`<div class="empty">"${term}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
+  $("allp").href="shop.html"+(cat==="all"?"":"?c="+encodeURIComponent(cat));
+  $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id),id=+p.id;return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${id}" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</button><button class="hrt" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${esc(p.n)}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}">কার্টে যোগ করুন</button></div></article>`}).join(""):`<div class="empty">"${esc(term)}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
 }
 $("grid").onclick=e=>{
   const a=e.target.closest("[data-a]"),v=e.target.closest("[data-v]"),w=e.target.closest("[data-w]");
@@ -200,7 +200,7 @@ function draw(){
   $("cnt").textContent=bn(ids.reduce((s,k)=>s+cart[k],0));
   $("total").textContent=tk(ids.reduce((s,k)=>s+cart[k]*lp(k).pr,0));
   $("items").innerHTML=ids.length?ids.map(k=>{const L=lp(k),p=L.p;
-    return `<div class="row"><i>${p.e}</i><div>${p.n}${L.vn}<br><small>${tk(L.pr)}</small></div><button data-m="${k}" aria-label="কমান">−</button><b>${bn(cart[k])}</b><button data-p="${k}" aria-label="বাড়ান">+</button></div>`}).join(""):`<p class="empty">কার্ট এখন খালি। পছন্দের পণ্য যোগ করুন।</p>`;
+    return `<div class="row"><i>${esc(p.e)}</i><div>${esc(p.n)}${L.vn}<br><small>${tk(L.pr)}</small></div><button data-m="${esc(k)}" aria-label="কমান">−</button><b>${bn(cart[k])}</b><button data-p="${esc(k)}" aria-label="বাড়ান">+</button></div>`}).join(""):`<p class="empty">কার্ট এখন খালি। পছন্দের পণ্য যোগ করুন।</p>`;
 }
 $("items").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;
   if(m)cart[m]--;if(p)cart[p]++;draw()};

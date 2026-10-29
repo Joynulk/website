@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>Admin — মেলা</title>
+<style>
+select{width:100%;font:inherit;padding:10px 12px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.tab{border:2px solid var(--ink);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 16px;font:inherit;cursor:pointer}
+.tab.on{background:var(--gold);color:#2a1b3d;font-weight:600}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.acts2{display:flex;gap:8px;flex-wrap:wrap}.acts2 .btn{width:auto;flex:1 1 120px;margin-top:8px}
+.ord.off{opacity:.65}
+.addr{margin:4px 0;white-space:pre-wrap}
+.st-delivered{background:var(--green);color:#fff}.st-cancelled{background:var(--mute);color:#fff}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.top .btn{width:auto;margin-top:0;padding:6px 14px}
+code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 6px;word-break:break-all}
+</style></head><body>
+<header id="hd"></header>
+<main class="wide" id="app"><p class="note">লোড হচ্ছে…</p></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {$,bn,tk,esc,STATUS}=Mela;Mela.header("");
+const app=$("app"),api=Mela.request;
+const NEXT={pending:["shipped","cancelled"],shipped:["delivered","cancelled"],delivered:[],cancelled:[]};
+const BTN={shipped:"পাঠানো হয়েছে",delivered:"পৌঁছেছে",cancelled:"বাতিল করুন"};
+const LOAD='<p class="note">লোড হচ্ছে…</p>';
+const FAIL='<p class="note" style="color:var(--red)">লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।</p>';
+const fd=d=>{try{return new Date(d).toLocaleString("bn-BD",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}catch(e){return""}};
+let tab="orders",ofilter="";
+
+async function start(){
+  if(!Mela.session()){gate();return}
+  let ok=false;
+  try{ok=await Mela.isAdmin()}catch(e){app.innerHTML=FAIL;return}
+  if(!ok){denied();return}
+  shell();
+}
+function gate(){
+  app.innerHTML=`<h2>Admin লগইন</h2><form id="gf"><label for="ge">ইমেইল</label><input id="ge" type="email" required autocomplete="email"><label for="gp">পাসওয়ার্ড</label><input id="gp" type="password" required autocomplete="current-password"><p class="note" id="gm" role="alert" style="color:var(--red)"></p><button class="btn" type="submit">লগইন</button></form>`;
+  $("gf").onsubmit=async e=>{e.preventDefault();
+    try{await Mela.signIn($("ge").value.trim(),$("gp").value);start()}
+    catch(err){$("gm").textContent="লগইন হয়নি। ইমেইল ও পাসওয়ার্ড দেখুন।"}};
+}
+function denied(){
+  const s=Mela.session(),em=(s&&s.user&&s.user.email)||"";
+  app.innerHTML=`<h2>অনুমতি নেই</h2><p>এই অ্যাকাউন্ট (${esc(em)}) admin নয়।</p><p class="note">দোকানের মালিক হলে Supabase SQL Editor-এ একবার চালান:<br><code>insert into admins(user_id) select id from auth.users where email = '${esc(em)}';</code></p><button class="btn alt" id="lo" type="button">লগ আউট</button>`;
+  $("lo").onclick=()=>{Mela.signOut();location.reload()};
+}
+function shell(){
+  const s=Mela.session();
+  app.innerHTML=`<div class="top"><h2>Admin panel</h2><span class="note">${esc((s.user&&s.user.email)||"")} <button class="btn alt" id="lo" type="button">লগ আউট</button></span></div>
+<div class="tabs" role="tablist"><button class="tab" data-t="orders" role="tab">অর্ডার</button><button class="tab" data-t="products" role="tab">পণ্য</button><button class="tab" data-t="cats" role="tab">ক্যাটাগরি</button></div><div id="pane"></div>`;
+  $("lo").onclick=()=>{Mela.signOut();location.reload()};
+  app.querySelector(".tabs").onclick=e=>{const b=e.target.closest("[data-t]");if(b){tab=b.dataset.t;show()}};
+  show();
+}
+function show(){
+  [...app.querySelectorAll(".tab")].forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});
+  ({orders:ordersPane,products:productsPane,cats:catsPane})[tab]();
+}
+const swap=()=>{const p=$("pane"),n=p.cloneNode(false);p.replaceWith(n);return n}; /* fresh element so old click handlers go away */
+
+/* ---------- orders ---------- */
+async function ordersPane(){
+  const pane=swap();pane.innerHTML=LOAD;
+  try{
+    const q="orders?select=id,name,phone,address,shipping,total,status,created_at,order_items(name,emoji,qty)&order=created_at.desc&limit=100"+(ofilter?"&status=eq."+ofilter:"");
+    const L=await api(q);
+    const chips=[["","সব"],...Object.entries(STATUS)].map(([k,v])=>`<button class="chip${k===ofilter?" on":""}" data-f="${esc(k)}">${esc(v)}</button>`).join("");
+    pane.innerHTML=`<div class="chips">${chips}</div><p class="cnt">${bn(L.length)}টি অর্ডার${L.length===100?" (সর্বশেষ 100টি)":""}</p>`+(L.map(o=>`<article class="ord"><div class="oh"><b>${esc(o.id)}</b><span class="st st-${esc(o.status)}">${esc(STATUS[o.status]||o.status)}</span></div><small>${esc(fd(o.created_at))} · ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></small><p class="addr">${esc(o.address)}</p><ul>${(o.order_items||[]).map(i=>`<li>${esc(i.emoji||"")} ${esc(i.name)} × ${bn(i.qty)}</li>`).join("")}</ul><div class="ot">মোট: ${tk(o.total)} (ডেলিভারি ${tk(o.shipping)})</div><div class="acts2">${(NEXT[o.status]||[]).map(s=>`<button class="btn${s==="cancelled"?" alt":""}" data-o="${esc(o.id)}" data-s="${s}">${BTN[s]}</button>`).join("")}</div></article>`).join("")||'<p class="empty">কোনো অর্ডার নেই।</p>');
+    pane.onclick=async e=>{
+      const f=e.target.closest("[data-f]");
+      if(f){ofilter=f.dataset.f;ordersPane();return}
+      const b=e.target.closest("[data-s]");if(!b)return;
+      const id=b.dataset.o,s=b.dataset.s;
+      if(s==="cancelled"&&!confirm("অর্ডার "+id+" বাতিল করবেন? এটি আর ফেরানো যাবে না।"))return;
+      b.disabled=true;
+      try{
+        const r=await api("orders?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({status:s})});
+        if(!r||!r.length)throw new Error("denied");
+        Mela.toast("অবস্থা বদলেছে");ordersPane();
+      }catch(err){Mela.toast(/invalid status/.test(err.message)?"এই অবস্থায় যাওয়া যায় না":"বদলানো যায়নি");b.disabled=false}
+    };
+  }catch(e){pane.innerHTML=FAIL}
+}
+
+/* ---------- products ---------- */
+async function productsPane(){
+  const pane=swap();pane.innerHTML=LOAD;
+  try{
+    const [cs,ps]=await Promise.all([api("categories?select=id,name,emoji&order=sort"),api("products?select=id,name,category_id,price,emoji,description,stock,active&order=id")]);
+    const cname=id=>{const c=cs.find(x=>x.id===id);return c?(c.emoji||"")+" "+c.name:"—"};
+    pane.innerHTML=`<h3 id="pft">নতুন পণ্য</h3>
+<form id="pf"><input type="hidden" id="pid">
+<label for="pn">নাম</label><input id="pn" required maxlength="80">
+<div class="row2"><div><label for="pc">ক্যাটাগরি</label><select id="pc" required>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.emoji||"")} ${esc(c.name)}</option>`).join("")}</select></div><div><label for="pr">দাম (৳)</label><input id="pr" type="number" min="0" step="1" required inputmode="numeric"></div></div>
+<div class="row2"><div><label for="pe">Emoji</label><input id="pe" maxlength="8"></div><div><label for="ps">Stock</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
+<label for="pd">বিবরণ</label><textarea id="pd" rows="2" maxlength="300"></textarea>
+<label class="chk"><input type="checkbox" id="pa" checked> ক্রেতারা দেখবে</label>
+<p class="note">Stock এখনো অর্ডারে কমে না ও যাচাই হয় না (ধাপ E-তে হবে)। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
+<div class="acts2"><button class="btn" type="submit">সংরক্ষণ করুন</button><button class="btn alt" type="button" id="pcl">ফর্ম খালি করুন</button></div></form>
+<h3>সব পণ্য (${bn(ps.length)})</h3>`+ps.map(p=>`<article class="ord${p.active?"":" off"}"><div class="oh"><b>${esc(p.emoji||"")} ${esc(p.name)}</b><span class="st">${p.active?"চালু":"লুকানো"}</span></div><small>${esc(cname(p.category_id))} · ${tk(p.price)} · stock ${bn(p.stock)}</small><div class="acts2"><button class="btn alt" data-e="${+p.id}">সম্পাদনা</button><button class="btn alt" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></article>`).join("");
+    const clear=()=>{$("pf").reset();$("pid").value="";$("pft").textContent="নতুন পণ্য"};
+    $("pcl").onclick=clear;
+    $("pf").onsubmit=async e=>{
+      e.preventDefault();
+      const body={name:$("pn").value.trim(),category_id:$("pc").value,price:parseInt($("pr").value,10),emoji:$("pe").value.trim()||null,description:$("pd").value.trim(),stock:parseInt($("ps").value,10)||0,active:$("pa").checked};
+      if(!body.name||!(body.price>=0)){Mela.toast("নাম ও দাম দিন");return}
+      try{
+        const id=$("pid").value;
+        const r=await api(id?"products?id=eq."+encodeURIComponent(id):"products",{method:id?"PATCH":"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(body)});
+        if(!r||!r.length)throw new Error("denied");
+        try{localStorage.removeItem("mela_catalog")}catch(x){}
+        Mela.toast("সংরক্ষণ হয়েছে");productsPane();
+      }catch(err){Mela.toast("সংরক্ষণ হয়নি")}
+    };
+    pane.onclick=async e=>{
+      const ed=e.target.closest("[data-e]"),tg=e.target.closest("[data-v]");
+      if(ed){
+        const p=ps.find(x=>x.id===+ed.dataset.e);if(!p)return;
+        $("pid").value=p.id;$("pn").value=p.name;$("pc").value=p.category_id||"";$("pr").value=p.price;$("pe").value=p.emoji||"";$("ps").value=p.stock;$("pd").value=p.description||"";$("pa").checked=!!p.active;
+        $("pft").textContent="সম্পাদনা: "+p.name;$("pf").scrollIntoView({behavior:"smooth"});
+      }
+      if(tg){
+        tg.disabled=true;
+        try{
+          const r=await api("products?id=eq."+encodeURIComponent(tg.dataset.v),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({active:tg.dataset.on==="1"})});
+          if(!r||!r.length)throw new Error("denied");
+          try{localStorage.removeItem("mela_catalog")}catch(x){}
+          productsPane();
+        }catch(err){Mela.toast("বদলানো যায়নি");tg.disabled=false}
+      }
+    };
+  }catch(e){pane.innerHTML=FAIL}
+}
+
+/* ---------- categories ---------- */
+async function catsPane(){
+  const pane=swap();pane.innerHTML=LOAD;
+  try{
+    const cs=await api("categories?select=id,name,emoji,color,sort&order=sort");
+    pane.innerHTML=`<h3 id="cft">নতুন ক্যাটাগরি</h3>
+<form id="cf"><input type="hidden" id="cold">
+<div class="row2"><div><label for="ci">কোড (ইংরেজি ছোট অক্ষর, সংখ্যা, -)</label><input id="ci" required pattern="[a-z0-9\\-]{2,20}" maxlength="20"></div><div><label for="cn">নাম</label><input id="cn" required maxlength="40"></div></div>
+<div class="row2"><div><label for="ce">Emoji</label><input id="ce" maxlength="8"></div><div><label for="cc">রঙ</label><input id="cc" type="color" value="#f4a300"></div></div>
+<label for="cs">ক্রম (ছোট সংখ্যা আগে)</label><input id="cs" type="number" step="1" value="10" inputmode="numeric">
+<p class="note">ক্যাটাগরি মোছা যায় না। কোড একবার বানালে বদলানো যায় না।</p>
+<div class="acts2"><button class="btn" type="submit">সংরক্ষণ করুন</button><button class="btn alt" type="button" id="ccl">ফর্ম খালি করুন</button></div></form>
+<h3>সব ক্যাটাগরি (${bn(cs.length)})</h3>`+cs.map(c=>`<article class="ord"><div class="oh"><b>${esc(c.emoji||"")} ${esc(c.name)}</b><span class="st">${esc(c.id)}</span></div><small>ক্রম ${bn(c.sort)}</small><div class="acts2"><button class="btn alt" data-e="${esc(c.id)}">সম্পাদনা</button></div></article>`).join("");
+    const clear=()=>{$("cf").reset();$("cold").value="";$("ci").readOnly=false;$("cft").textContent="নতুন ক্যাটাগরি"};
+    $("ccl").onclick=clear;
+    $("cf").onsubmit=async e=>{
+      e.preventDefault();
+      const body={name:$("cn").value.trim(),emoji:$("ce").value.trim()||null,color:$("cc").value,sort:parseInt($("cs").value,10)||0};
+      const old=$("cold").value;
+      try{
+        const r=old?await api("categories?id=eq."+encodeURIComponent(old),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(body)})
+                  :await api("categories",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({id:$("ci").value.trim(),...body})});
+        if(!r||!r.length)throw new Error("denied");
+        try{localStorage.removeItem("mela_catalog")}catch(x){}
+        Mela.toast("সংরক্ষণ হয়েছে");catsPane();
+      }catch(err){Mela.toast("সংরক্ষণ হয়নি")}
+    };
+    pane.onclick=e=>{
+      const ed=e.target.closest("[data-e]");if(!ed)return;
+      const c=cs.find(x=>x.id===ed.dataset.e);if(!c)return;
+      $("cold").value=c.id;$("ci").value=c.id;$("ci").readOnly=true;$("cn").value=c.name;$("ce").value=c.emoji||"";
+      $("cc").value=/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:"#f4a300";$("cs").value=c.sort;
+      $("cft").textContent="সম্পাদনা: "+c.name;$("cf").scrollIntoView({behavior:"smooth"});
+    };
+  }catch(e){pane.innerHTML=FAIL}
+}
+
+start();
+</script></body></html>

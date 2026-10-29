@@ -4,7 +4,7 @@
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
-const {CATS,P,VAR,$,bn,tk,tone}=Mela;Mela.header("shop");
+const {CATS,P,VAR,$,bn,tk,tone,esc}=Mela;Mela.header("shop");
 const pid=+Mela.params().get("id");
 let sig="";
 function missing(){
@@ -17,9 +17,9 @@ function show(){
   const s=JSON.stringify(p);if(s===sig)return true;sig=s;
   document.title=p.n+" — মেলা";
   const cat=CATS.find(c=>c.id===p.c)||{n:"দোকান"};let vi=0,qty=1;
-  $("pg").innerHTML=`<nav class="crumb" aria-label="পথ"><a href="index.html">হোম</a> › <a href="shop.html?c=${p.c}">${cat.n}</a> › ${p.n}</nav>
-<div class="pd"><div class="pimg" style="background:${tone(p.c)}66" aria-hidden="true">${p.e}</div>
-<div class="pinfo"><h1>${p.n}</h1><div class="pprice" id="pp"></div><p>${p.d}</p>
+  $("pg").innerHTML=`<nav class="crumb" aria-label="পথ"><a href="index.html">হোম</a> › <a href="shop.html?c=${encodeURIComponent(p.c)}">${esc(cat.n)}</a> › ${esc(p.n)}</nav>
+<div class="pd"><div class="pimg" style="background:${tone(p.c)}66" aria-hidden="true">${esc(p.e)}</div>
+<div class="pinfo"><h1>${esc(p.n)}</h1><div class="pprice" id="pp"></div><p>${esc(p.d)}</p>
 <div class="vs" id="vs" role="group" aria-label="ধরন">${VAR.map((v,i)=>`<button class="vr" data-i="${i}" aria-pressed="false">${v.n}${v.x?" +"+tk(v.x):""}</button>`).join("")}</div>
 <div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="tot"></b></div>
 <div class="acts"><button class="btn" id="addb">কার্টে যোগ করুন</button><button class="btn alt" id="buyb">এখনই কিনুন</button><button class="hrt big" id="wb" aria-label="প্রিয় তালিকা" aria-pressed="false">♡</button></div>
