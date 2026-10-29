@@ -49,6 +49,7 @@ input,textarea{width:100%;font:inherit;padding:10px 12px;border:2px solid var(--
 .p h3{font-size:18px;margin:0;font-family:"Tiro Bangla","Hind Siliguri",serif;font-weight:400}.p h3 a{color:var(--ink);text-decoration:none}
 .pr{font-weight:600;color:var(--green)}
 .add{margin-top:auto;border:2px solid var(--ink);background:var(--gold);color:#2a1b3d;border-radius:8px;padding:6px;font:inherit;font-weight:600;cursor:pointer}
+.add:disabled{opacity:.5;cursor:not-allowed}
 .hrt{width:38px;height:38px;border-radius:50%;border:2px solid var(--ink);background:var(--card);color:var(--red);font-size:20px;line-height:1;cursor:pointer}
 .p .hrt{position:absolute;top:8px;right:8px}
 

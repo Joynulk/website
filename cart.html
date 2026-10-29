@@ -27,13 +27,24 @@ function draw(){
   $("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
   $("sub").textContent=tk(sub);$("ship").textContent=sh?tk(sh):"বিনামূল্যে";$("tot").textContent=tk(sub+sh);$("go").disabled=!L.length;
 }
-/* keep cart prices equal to the shop's current prices; drop products that no longer exist */
-function sync(){
+/* keep the cart equal to the shop: current prices, no products that are gone.
+   With fresh data (fresh=true) quantities are also cut down to the stock left. */
+function sync(fresh){
   L=L.filter(l=>P.some(p=>p.id==l.k.split(":")[0]));
   L.forEach(l=>{const [i,v]=l.k.split(":"),p=P.find(x=>x.id==i);l.pr=p.p+(VAR[+v]||VAR[0]).x});
+  if(fresh){
+    const left={};P.forEach(p=>{if(p.s!=null)left[p.id]=p.s});
+    L.forEach(l=>{const i=l.k.split(":")[0];if(left[i]!=null){l.q=Math.max(0,Math.min(l.q,left[i]));left[i]-=l.q}});
+  }
   draw();
 }
 $("lines").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;if(m!==undefined)L[m].q--;if(p!==undefined)L[p].q++;draw()};
+function oops(m){
+  if(/too many orders/.test(m))return"এই ফোন নম্বর থেকে ঘণ্টায় 3টির বেশি অর্ডার নেওয়া হয় না। কিছুক্ষণ পর আবার চেষ্টা করুন।";
+  if(/out of stock/.test(m))return"কিছু পণ্যের stock এখন যথেষ্ট নেই। কার্ট ঠিক করে দেওয়া হয়েছে, আবার দেখে অর্ডার করুন।";
+  if(/product not found/.test(m))return"কোনো পণ্য আর পাওয়া যাচ্ছে না। কার্ট ঠিক করে দেওয়া হয়েছে, আবার দেখুন।";
+  return"অর্ডার পাঠানো যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
+}
 $("f").onsubmit=async e=>{
   e.preventDefault();if(!L.length)return;
   const btn=$("go"),msg=$("err");
@@ -47,10 +58,11 @@ $("f").onsubmit=async e=>{
     try{localStorage.removeItem("mela_cart")}catch(err){}
     setTimeout(()=>{location.href="order-placed.html"},150);
   }catch(err){
-    msg.textContent="অর্ডার পাঠানো যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।"+(/product not found/.test(err.message)?" (কোনো পণ্য আর পাওয়া যাচ্ছে না, কার্ট থেকে সরিয়ে দিন।)":"");
-    btn.disabled=false;btn.textContent=LABEL;
+    msg.textContent=oops(err.message);
+    if(/out of stock|product not found/.test(err.message)){try{await Mela.refresh();sync(true)}catch(x){}}
+    btn.disabled=!L.length;btn.textContent=LABEL;
   }
 };
-sync();
-Mela.load().then(ok=>{if(ok)sync()});
+sync(false);
+Mela.load().then(ok=>{if(ok)sync(true)});
 </script></body></html>

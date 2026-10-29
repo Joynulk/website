@@ -17,12 +17,13 @@ function show(){
   const s=JSON.stringify(p);if(s===sig)return true;sig=s;
   document.title=p.n+" — মেলা";
   const cat=CATS.find(c=>c.id===p.c)||{n:"দোকান"};let vi=0,qty=1;
+  const out=Mela.soldOut(p),maxq=Math.min(20,p.s!=null?Math.max(p.s,1):20);
   $("pg").innerHTML=`<nav class="crumb" aria-label="পথ"><a href="index.html">হোম</a> › <a href="shop.html?c=${encodeURIComponent(p.c)}">${esc(cat.n)}</a> › ${esc(p.n)}</nav>
 <div class="pd"><div class="pimg" style="background:${tone(p.c)}66" aria-hidden="true">${esc(p.e)}</div>
 <div class="pinfo"><h1>${esc(p.n)}</h1><div class="pprice" id="pp"></div><p>${esc(p.d)}</p>
 <div class="vs" id="vs" role="group" aria-label="ধরন">${VAR.map((v,i)=>`<button class="vr" data-i="${i}" aria-pressed="false">${v.n}${v.x?" +"+tk(v.x):""}</button>`).join("")}</div>
 <div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="tot"></b></div>
-<div class="acts"><button class="btn" id="addb">কার্টে যোগ করুন</button><button class="btn alt" id="buyb">এখনই কিনুন</button><button class="hrt big" id="wb" aria-label="প্রিয় তালিকা" aria-pressed="false">♡</button></div>
+<div class="acts"><button class="btn" id="addb"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button><button class="btn alt" id="buyb"${out?" disabled":""}>এখনই কিনুন</button><button class="hrt big" id="wb" aria-label="প্রিয় তালিকা" aria-pressed="false">♡</button></div>
 <ul class="perks"><li>🚚 ক্যাশ অন ডেলিভারি</li><li>🔁 ৭ দিনে ফেরত</li><li>🎁 ২০০০ টাকা বা তার বেশি কিনলে ডেলিভারি ফ্রি</li></ul></div></div>
 <section id="rw"><h2>এই ধরনের আরও পণ্য</h2><div class="grid" id="rel"></div></section>`;
   const paint=()=>{
@@ -33,9 +34,9 @@ function show(){
   const wpaint=()=>{const on=Mela.isWish(p.id);$("wb").textContent=on?"♥":"♡";$("wb").setAttribute("aria-pressed",on)};
   $("vs").onclick=e=>{const b=e.target.closest("[data-i]");if(b){vi=+b.dataset.i;paint()}};
   $("mm").onclick=()=>{qty=Math.max(1,qty-1);paint()};
-  $("mpl").onclick=()=>{qty=Math.min(20,qty+1);paint()};
-  $("addb").onclick=()=>{Mela.addToCart(p.id,vi,qty);Mela.toast(p.n+" কার্টে যোগ হয়েছে")};
-  $("buyb").onclick=()=>{Mela.addToCart(p.id,vi,qty);location.href="cart.html"};
+  $("mpl").onclick=()=>{qty=Math.min(maxq,qty+1);paint()};
+  $("addb").onclick=()=>{if(Mela.addToCart(p.id,vi,qty))Mela.toast(p.n+" কার্টে যোগ হয়েছে");else Mela.toast("স্টক নেই")};
+  $("buyb").onclick=()=>{if(Mela.addToCart(p.id,vi,qty))location.href="cart.html";else Mela.toast("স্টক নেই")};
   $("wb").onclick=()=>{Mela.toggleWish(p.id);wpaint()};
   const rel=P.filter(x=>x.c===p.c&&x.id!==p.id).slice(0,4);
   if(rel.length){$("rel").innerHTML=rel.map(x=>Mela.card(x)).join("");Mela.bindGrid($("rel"))}else $("rw").hidden=true;

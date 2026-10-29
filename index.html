@@ -52,6 +52,7 @@ main{max-width:1100px;margin:0 auto;padding:12px 16px 60px}
 .hrt{position:absolute;top:8px;right:8px;width:38px;height:38px;border-radius:50%;border:2px solid var(--ink);background:var(--card);color:var(--red);font-size:20px;line-height:1}
 .add{margin-top:auto;border:2px solid var(--ink);background:var(--gold);color:#2a1b3d;border-radius:8px;padding:6px;font-weight:600}
 .add:active{transform:translateY(1px)}
+.add:disabled{opacity:.5;cursor:not-allowed}
 .empty{grid-column:1/-1;text-align:center;color:var(--mute);padding:40px 0}
 footer{text-align:center;padding:26px 16px;border-top:2px dashed var(--line);color:var(--mute)}
 footer a{color:var(--mute);margin:0 6px}
@@ -149,7 +150,7 @@ function render(anim){
   $("title").textContent=cat==="all"?"সব পণ্য":cc.n;
   $("count").textContent=bn(list.length)+"টি পণ্য";
   $("allp").href="shop.html"+(cat==="all"?"":"?c="+encodeURIComponent(cat));
-  $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id),id=+p.id;return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${id}" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</button><button class="hrt" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${esc(p.n)}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}">কার্টে যোগ করুন</button></div></article>`}).join(""):`<div class="empty">"${esc(term)}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
+  $("grid").innerHTML=list.length?list.map(p=>{const w=Mela.isWish(p.id),id=+p.id,out=Mela.soldOut(p);return `<article class="p${anim?" ra":""}"><button class="ph" style="background:${tone(p.c)}55" data-v="${id}" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</button><button class="hrt" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3>${esc(p.n)}</h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button></div></article>`}).join(""):`<div class="empty">"${esc(term)}" নামে কোনো পণ্য নেই। অন্য নাম লিখে দেখুন।</div>`;
 }
 $("grid").onclick=e=>{
   const a=e.target.closest("[data-a]"),v=e.target.closest("[data-v]"),w=e.target.closest("[data-w]");
@@ -175,7 +176,8 @@ const tgt=()=>{const w=Math.min(420,innerWidth-24),h=Math.min(590,innerHeight-24
 function paint(){$("mtot").textContent=tk((cp.p+VAR[vi].x)*qty);$("mq").textContent=bn(qty);[...$("mv").children].forEach((b,i)=>b.classList.toggle("on",i===vi))}
 function openP(id,btn){
   cp=P.find(x=>x.id===id);qty=1;vi=0;mp.style.setProperty("--ac",tone(cp.c));
-  $("mph").textContent=cp.e;$("mt").textContent=cp.n;$("md").textContent=cp.d;$("mb").textContent="কার্টে যোগ করুন";
+  const out=Mela.soldOut(cp);
+  $("mph").textContent=cp.e;$("mt").textContent=cp.n;$("md").textContent=cp.d;$("mb").textContent=out?"স্টক নেই":"কার্টে যোগ করুন";$("mb").disabled=out;
   $("ml").href="product.html?id="+cp.id;
   $("mv").innerHTML=VAR.map((v,i)=>`<button class="vr" data-i="${i}">${v.n}</button>`).join("");paint();
   src=btn.closest(".p").getBoundingClientRect();
@@ -188,12 +190,17 @@ function closeP(){mp.classList.remove("full");setR(src,12);setTimeout(()=>mo.cla
 $("dx").onclick=closeP;mo.onclick=e=>{if(e.target===mo)closeP()};
 addEventListener("keydown",e=>{if(e.key==="Escape"&&mo.classList.contains("show"))closeP()});
 $("mv").onclick=e=>{if(e.target.dataset.i){vi=+e.target.dataset.i;paint()}};
-$("mm").onclick=()=>{qty=Math.max(1,qty-1);paint()};$("mpl").onclick=()=>{qty++;paint()};
+$("mm").onclick=()=>{qty=Math.max(1,qty-1);paint()};
+$("mpl").onclick=()=>{qty=Math.min(qty+1,Math.min(20,cp.s!=null?Math.max(cp.s,1):20));paint()};
 $("mb").onclick=()=>{add(cp.id+":"+vi,qty);$("mb").textContent="যোগ হয়েছে ✓";setTimeout(closeP,700)};
 
 /* cart */
 function toast(t){const el=$("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1600)}
-function add(k,q=1){const cb=$("cartBtn");cb.classList.remove("bump");void cb.offsetWidth;cb.classList.add("bump");cart[k]=(cart[k]||0)+q;draw();toast(lp(k).p.n+" কার্টে যোগ হয়েছে")}
+function add(k,q=1){
+  const p0=P.find(x=>x.id==k.split(":")[0]);
+  if(!p0||Mela.soldOut(p0)){toast("স্টক নেই");return}
+  const cb=$("cartBtn");cb.classList.remove("bump");void cb.offsetWidth;cb.classList.add("bump");cart[k]=(cart[k]||0)+q;draw();toast(lp(k).p.n+" কার্টে যোগ হয়েছে");
+}
 const live=()=>Object.keys(cart).filter(k=>cart[k]>0&&P.some(x=>x.id==k.split(":")[0]));
 function draw(){
   const ids=live();

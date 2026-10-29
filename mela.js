@@ -36,6 +36,8 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
 const col=c=>/^#[0-9a-fA-F]{6}$/.test(c)?c:"#f4a300";
 const tone=id=>col((CATS.find(c=>c.id===id)||CATS[0]).c);
 const params=()=>new URLSearchParams(location.search);
+/* p.s is the stock from the database; the built-in starter list has none and counts as available */
+const soldOut=p=>p.s!=null&&p.s<=0;
 
 /* localStorage helpers */
 const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
@@ -131,24 +133,40 @@ function load(){
   if(loading)return loading;
   loading=Promise.all([
     sb("categories?select=id,name,emoji,color&order=sort"),
-    sb("products?select=id,name,category_id,price,emoji,description&active=eq.true&order=id")
+    sb("products?select=id,name,category_id,price,emoji,description,stock&active=eq.true&order=id")
   ]).then(([cs,ps])=>{
     if(!cs.length||!ps.length)return false;
     applyCatalog(
       cs.map(c=>({id:c.id,n:c.name,e:c.emoji||"🏷️",c:c.color||"#f4a300"})),
-      ps.map(p=>({id:p.id,n:p.name,c:p.category_id,p:p.price,e:p.emoji||"🛍️",d:p.description||""}))
+      ps.map(p=>({id:p.id,n:p.name,c:p.category_id,p:p.price,e:p.emoji||"🛍️",d:p.description||"",s:p.stock}))
     );
     set("mela_catalog",{CATS:CATS.slice(1),P:P.slice()});
     return true;
   }).catch(()=>false);
   return loading;
 }
+/* download the catalogue again (used after the server says something is out of stock) */
+function refresh(){loading=null;return load()}
 
-/* place an order: the server recomputes every price, so the browser cannot change them.
+/* One key per checkout attempt. If the same checkout is sent twice (double tap, network retry),
+   the server returns the first order instead of creating a second one. */
+function orderKey(d,lines){
+  const sig=JSON.stringify([lines.map(l=>[l.k,l.q]),d.name,d.phone,d.addr]);
+  let o=get("mela_order_key",null);
+  if(!o||o.sig!==sig){
+    o={sig,key:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():(Date.now().toString(16)+Math.random().toString(16).slice(2,12))};
+    set("mela_order_key",o);
+  }
+  return o.key;
+}
+
+/* place an order: the server recomputes every price and takes the stock, so the browser cannot change them.
    When a customer is logged in the order is linked to their account. */
-function placeOrder(d,lines){
+async function placeOrder(d,lines){
   const items=lines.map(l=>{const [id,vi]=l.k.split(":");return{id:+id,qty:l.q,gift:+vi>0}});
-  return sb("rpc/place_order",{method:"POST",body:JSON.stringify({p_name:d.name,p_phone:d.phone,p_address:d.addr,p_items:items})});
+  const r=await sb("rpc/place_order",{method:"POST",body:JSON.stringify({p_name:d.name,p_phone:d.phone,p_address:d.addr,p_items:items,p_key:orderKey(d,lines)})});
+  del("mela_order_key");
+  return r;
 }
 /* the logged-in customer's own orders (the database only returns their own rows) */
 const myOrders=()=>sb("orders?select=id,total,status,created_at,order_items(name,emoji,unit_price,qty)&order=created_at.desc&limit=50");
@@ -157,11 +175,13 @@ const myOrders=()=>sb("orders?select=id,total,status,created_at,order_items(name
 const cartLines=()=>get("mela_cart",[]).filter(l=>l.q>0);
 const cartCount=()=>cartLines().reduce((s,l)=>s+l.q,0);
 function refreshBadge(){const b=$("cb");if(b)b.textContent=bn(cartCount())}
+/* returns false when the product is sold out */
 function addToCart(id,vi=0,q=1){
-  vi=+vi||0;const p=P.find(x=>x.id==id);if(!p)return;
+  vi=+vi||0;const p=P.find(x=>x.id==id);if(!p||soldOut(p))return false;
   const k=p.id+":"+vi,L=cartLines(),f=L.find(l=>l.k===k);
   if(f)f.q+=q;else L.push({k,n:p.n+(vi?" ("+VAR[vi].n+")":""),e:p.e,pr:p.p+VAR[vi].x,q});
   set("mela_cart",L);refreshBadge();
+  return true;
 }
 
 /* wishlist: array of product ids under mela_wish */
@@ -187,16 +207,16 @@ function header(active){
 
 /* product card used by shop, wishlist and product pages */
 function card(p){
-  const w=isWish(p.id),id=+p.id;
-  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}">কার্টে যোগ করুন</button></div></article>`;
+  const w=isWish(p.id),id=+p.id,out=soldOut(p);
+  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button></div></article>`;
 }
 function bindGrid(el,after){
   el.addEventListener("click",e=>{
     const a=e.target.closest("[data-a]"),w=e.target.closest("[data-w]");
-    if(a){addToCart(a.dataset.a);toast(P.find(x=>x.id==a.dataset.a).n+" কার্টে যোগ হয়েছে")}
+    if(a){const p=P.find(x=>x.id==a.dataset.a);if(p&&addToCart(a.dataset.a))toast(p.n+" কার্টে যোগ হয়েছে");else toast("স্টক নেই")}
     if(w){const on=toggleWish(w.dataset.w);w.classList.toggle("on",on);w.textContent=on?"♥":"♡";w.setAttribute("aria-pressed",on);if(after)after()}
   });
 }
 
-return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,params,get,set,load,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,soldOut,params,get,set,load,refresh,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
 })();

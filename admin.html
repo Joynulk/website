@@ -72,7 +72,7 @@ async function ordersPane(){
       if(f){ofilter=f.dataset.f;ordersPane();return}
       const b=e.target.closest("[data-s]");if(!b)return;
       const id=b.dataset.o,s=b.dataset.s;
-      if(s==="cancelled"&&!confirm("অর্ডার "+id+" বাতিল করবেন? এটি আর ফেরানো যাবে না।"))return;
+      if(s==="cancelled"&&!confirm("অর্ডার "+id+" বাতিল করবেন? এটি আর ফেরানো যাবে না। পণ্যগুলো আবার stock-এ ফিরবে।"))return;
       b.disabled=true;
       try{
         const r=await api("orders?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({status:s})});
@@ -96,9 +96,9 @@ async function productsPane(){
 <div class="row2"><div><label for="pe">Emoji</label><input id="pe" maxlength="8"></div><div><label for="ps">Stock</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
 <label for="pd">বিবরণ</label><textarea id="pd" rows="2" maxlength="300"></textarea>
 <label class="chk"><input type="checkbox" id="pa" checked> ক্রেতারা দেখবে</label>
-<p class="note">Stock এখনো অর্ডারে কমে না ও যাচাই হয় না (ধাপ E-তে হবে)। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
+<p class="note">অর্ডার এলে stock নিজে কমে, বাতিল হলে ফেরত আসে। 0 হলে ক্রেতা অর্ডার করতে পারে না। নতুন মাল এলে এখান থেকে stock-এর সংখ্যা বাড়িয়ে দিন। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
 <div class="acts2"><button class="btn" type="submit">সংরক্ষণ করুন</button><button class="btn alt" type="button" id="pcl">ফর্ম খালি করুন</button></div></form>
-<h3>সব পণ্য (${bn(ps.length)})</h3>`+ps.map(p=>`<article class="ord${p.active?"":" off"}"><div class="oh"><b>${esc(p.emoji||"")} ${esc(p.name)}</b><span class="st">${p.active?"চালু":"লুকানো"}</span></div><small>${esc(cname(p.category_id))} · ${tk(p.price)} · stock ${bn(p.stock)}</small><div class="acts2"><button class="btn alt" data-e="${+p.id}">সম্পাদনা</button><button class="btn alt" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></article>`).join("");
+<h3>সব পণ্য (${bn(ps.length)})</h3>`+ps.map(p=>`<article class="ord${p.active?"":" off"}"><div class="oh"><b>${esc(p.emoji||"")} ${esc(p.name)}</b><span class="st">${p.active?"চালু":"লুকানো"}</span></div><small>${esc(cname(p.category_id))} · ${tk(p.price)} · stock ${bn(p.stock)}${p.stock<=0?" (শেষ)":""}</small><div class="acts2"><button class="btn alt" data-e="${+p.id}">সম্পাদনা</button><button class="btn alt" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></article>`).join("");
     const clear=()=>{$("pf").reset();$("pid").value="";$("pft").textContent="নতুন পণ্য"};
     $("pcl").onclick=clear;
     $("pf").onsubmit=async e=>{
