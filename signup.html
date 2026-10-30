@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>নতুন অ্যাকাউন্ট — মেলা</title></head><body>
+<header id="hd"></header>
+<main><h2>নতুন অ্যাকাউন্ট</h2>
+<p class="note">অ্যাকাউন্ট খুললে আপনার অর্ডার ইতিহাস ও ডেলিভারির ঠিকানা সব ডিভাইসে পাবেন।</p>
+<p class="note" id="msg" role="alert"></p>
+<form id="sf"><label for="em">ইমেইল</label><input id="em" type="email" required autocomplete="email">
+<label for="pw">পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label><input id="pw" type="password" minlength="8" required autocomplete="new-password">
+<label for="pw2">আবার পাসওয়ার্ড লিখুন</label><input id="pw2" type="password" minlength="8" required autocomplete="new-password">
+<label class="chk"><input type="checkbox" id="sp"> পাসওয়ার্ড দেখান</label>
+<button class="btn" type="submit" id="su">অ্যাকাউন্ট খুলুন</button></form>
+<p style="text-align:center;margin-top:20px">আগে থেকেই অ্যাকাউন্ট আছে? <a id="toLogin" href="login.html">লগইন করুন</a></p></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {$}=Mela;Mela.header("acc");
+const nx=Mela.params().get("next")||"";
+const NEXT=/^(account|cart|admin|shop|index|wishlist)\.html$/.test(nx)?nx:"account.html";
+$("toLogin").href="login.html"+(NEXT==="account.html"?"":"?next="+NEXT);
+if(Mela.session())location.replace(NEXT);
+const say=(t,bad)=>{const m=$("msg");m.textContent=t;m.style.color=bad?"var(--red)":"var(--green)"};
+const nice=m=>/already (been )?registered/i.test(m)?"এই ইমেইলে অ্যাকাউন্ট আছে। লগইন পেজে যান।"
+  :/rate limit|too many|only request this after/i.test(m)?"অনেকবার চেষ্টা হয়েছে, একটু পরে আবার চেষ্টা করুন।"
+  :/password/i.test(m)?"পাসওয়ার্ড সহজ বা ছোট। কমপক্ষে ৮ অক্ষরের ভালো পাসওয়ার্ড দিন।"
+  :"অ্যাকাউন্ট খোলা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
+$("sp").onchange=e=>{const t=e.target.checked?"text":"password";$("pw").type=t;$("pw2").type=t};
+$("sf").onsubmit=async e=>{
+  e.preventDefault();say("");
+  const pw=$("pw").value;
+  if(pw!==$("pw2").value){say("দুই জায়গায় পাসওয়ার্ড মেলেনি। আবার দেখুন।",true);return}
+  $("su").disabled=true;
+  try{
+    const ok=await Mela.signUp($("em").value.trim(),pw);
+    if(ok){location.href=NEXT;return}
+    say("আপনার ইমেইলে যাচাইয়ের লিংক পাঠানো হয়েছে। লিংকে চাপ দিয়ে তারপর লগইন করুন।");
+  }catch(err){say(nice(err.message),true)}
+  $("su").disabled=false;
+};
+</script></body></html>

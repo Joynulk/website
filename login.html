@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>লগইন — মেলা</title></head><body>
+<header id="hd"></header>
+<main><h2>লগইন</h2>
+<p class="note">লগইন করলে আপনার অর্ডার ইতিহাস ও ঠিকানা সব ডিভাইসে পাবেন। লগইন ছাড়াও অর্ডার করা যায়।</p>
+<p class="note" id="msg" role="alert"></p>
+<form id="lf"><label for="em">ইমেইল</label><input id="em" type="email" required autocomplete="email">
+<label for="pw">পাসওয়ার্ড</label><input id="pw" type="password" required autocomplete="current-password">
+<label class="chk"><input type="checkbox" id="sp"> পাসওয়ার্ড দেখান</label>
+<button class="btn" type="submit" id="li">লগইন</button>
+<button class="btn alt" type="button" id="fp">পাসওয়ার্ড ভুলে গেছেন?</button></form>
+<p style="text-align:center;margin-top:20px">অ্যাকাউন্ট নেই? <a id="toSignup" href="signup.html">নতুন অ্যাকাউন্ট খুলুন</a></p></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {$}=Mela;Mela.header("acc");
+/* where to go after login: only our own pages */
+const nx=Mela.params().get("next")||"";
+const NEXT=/^(account|cart|admin|shop|index|wishlist)\.html$/.test(nx)?nx:"account.html";
+$("toSignup").href="signup.html"+(NEXT==="account.html"?"":"?next="+NEXT);
+if(Mela.session())location.replace(NEXT);
+const say=(t,bad)=>{const m=$("msg");m.textContent=t;m.style.color=bad?"var(--red)":"var(--green)"};
+const nice=m=>/invalid login/i.test(m)?"ইমেইল বা পাসওয়ার্ড ভুল।"
+  :/not confirmed/i.test(m)?"আগে ইমেইল যাচাই করুন।"
+  :/rate limit|too many|only request this after/i.test(m)?"অনেকবার চেষ্টা হয়েছে, একটু পরে আবার চেষ্টা করুন।"
+  :"কাজটি হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
+const busy=b=>["li","fp"].forEach(i=>$(i).disabled=b);
+$("sp").onchange=e=>{$("pw").type=e.target.checked?"text":"password"};
+$("lf").onsubmit=async e=>{
+  e.preventDefault();busy(true);say("");
+  try{await Mela.signIn($("em").value.trim(),$("pw").value);location.href=NEXT;return}
+  catch(err){say(nice(err.message),true)}
+  busy(false);
+};
+$("fp").onclick=async()=>{
+  const em=$("em");
+  if(!em.value||!em.checkValidity()){say("আগে উপরে আপনার ইমেইল লিখুন।",true);em.focus();return}
+  busy(true);
+  try{await Mela.recover(em.value.trim());say("ইমেইলটি নিবন্ধিত থাকলে পাসওয়ার্ড বদলানোর লিংক পাঠানো হয়েছে।")}
+  catch(err){say(nice(err.message),true)}
+  busy(false);
+};
+</script></body></html>

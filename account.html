@@ -4,13 +4,9 @@
 <p class="note" id="msg" role="status"></p>
 <section id="rec" hidden><h2>নতুন পাসওয়ার্ড দিন</h2>
 <form id="rf"><label for="np">নতুন পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label><input id="np" type="password" minlength="8" required autocomplete="new-password"><button class="btn" type="submit">পাসওয়ার্ড বদলান</button></form></section>
-<section id="auth" hidden><h2>লগইন বা নতুন অ্যাকাউন্ট</h2>
+<section id="auth" hidden><h2>অ্যাকাউন্ট</h2>
 <p class="note">লগইন করলে আপনার অর্ডার ইতিহাস ও ঠিকানা সব ডিভাইসে পাবেন। লগইন ছাড়াও অর্ডার করা যায়।</p>
-<form id="af"><label for="em">ইমেইল</label><input id="em" type="email" required autocomplete="email">
-<label for="pw">পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label><input id="pw" type="password" minlength="8" required autocomplete="current-password">
-<button class="btn" type="submit" id="li">লগইন</button>
-<button class="btn alt" type="button" id="su">নতুন অ্যাকাউন্ট খুলুন</button>
-<button class="btn alt" type="button" id="fp">পাসওয়ার্ড ভুলে গেছেন?</button></form></section>
+<div class="acts"><a class="btn" href="login.html">লগইন</a><a class="btn alt" href="signup.html">নতুন অ্যাকাউন্ট খুলুন</a></div></section>
 <section id="me" hidden><h2>আমার অ্যাকাউন্ট</h2><p>লগইন আছে: <b id="who"></b></p><button class="btn alt" id="lo" type="button">লগ আউট</button></section>
 <h2>ডেলিভারির তথ্য</h2>
 <form id="f"><label for="nm">নাম</label><input id="nm" required autocomplete="name">
@@ -26,13 +22,7 @@
 const {$,bn,tk,esc}=Mela;Mela.header("acc");
 const fd=d=>{if(!d)return"";try{return new Date(d).toLocaleDateString("bn-BD",{day:"numeric",month:"long",year:"numeric"})}catch(e){return""}};
 const say=(t,bad)=>{const m=$("msg");m.textContent=t;m.style.color=bad?"var(--red)":"var(--green)"};
-const nice=m=>/invalid login/i.test(m)?"ইমেইল বা পাসওয়ার্ড ভুল।"
-  :/already (been )?registered/i.test(m)?"এই ইমেইলে অ্যাকাউন্ট আছে, লগইন করুন।"
-  :/not confirmed/i.test(m)?"আগে ইমেইল যাচাই করুন।"
-  :/rate limit|too many|only request this after/i.test(m)?"অনেকবার চেষ্টা হয়েছে, একটু পরে আবার চেষ্টা করুন।"
-  :/password/i.test(m)?"পাসওয়ার্ড সহজ বা ছোট। কমপক্ষে ৮ অক্ষরের ভালো পাসওয়ার্ড দিন।"
-  :"কাজটি হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
-const busy=b=>["li","su","fp"].forEach(i=>$(i).disabled=b);
+const nice=m=>/password/i.test(m)?"পাসওয়ার্ড সহজ বা ছোট। কমপক্ষে ৮ অক্ষরের ভালো পাসওয়ার্ড দিন।":"কাজটি হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
 function fill(){const u=Mela.user()||{};$("nm").value=u.name||"";$("ph").value=u.phone||"";$("ad").value=u.addr||""}
 const row=o=>`<article class="ord"><div class="oh"><b>${esc(o.id)}</b><span class="st">${esc(o.st)}</span></div><small>${esc(fd(o.date))}</small><ul>${o.lines.map(l=>`<li>${esc(l.e||"")} ${esc(l.n)} × ${bn(l.q)}</li>`).join("")}</ul><div class="ot">মোট: ${tk(o.total)}</div></article>`;
 async function orders(){
@@ -60,31 +50,6 @@ function view(){
   $("pnote").textContent=s?"আপনার তথ্য আপনার অ্যাকাউন্টে সংরক্ষিত থাকে, সব ডিভাইসে পাবেন।":"এই তথ্য শুধু এই ব্রাউজারে থাকে, চেকআউটে ঠিকানা বসাতে কাজে লাগে। লগইন করলে সব ডিভাইসে পাবেন।";
   fill();orders();
 }
-
-/* login / sign up / reset */
-$("af").onsubmit=async e=>{
-  e.preventDefault();busy(true);
-  try{await Mela.signIn($("em").value.trim(),$("pw").value);say("");$("pw").value="";view()}
-  catch(err){say(nice(err.message),true)}
-  busy(false);
-};
-$("su").onclick=async()=>{
-  if(!$("af").reportValidity())return;busy(true);
-  try{
-    const ok=await Mela.signUp($("em").value.trim(),$("pw").value);
-    $("pw").value="";
-    if(ok){say("");view()}else say("আপনার ইমেইলে যাচাইয়ের লিংক পাঠানো হয়েছে। লিংকে চাপ দিয়ে তারপর লগইন করুন।");
-  }catch(err){say(nice(err.message),true)}
-  busy(false);
-};
-$("fp").onclick=async()=>{
-  const em=$("em");
-  if(!em.value||!em.checkValidity()){say("আগে উপরে আপনার ইমেইল লিখুন।",true);em.focus();return}
-  busy(true);
-  try{await Mela.recover(em.value.trim());say("ইমেইলটি নিবন্ধিত থাকলে পাসওয়ার্ড বদলানোর লিংক পাঠানো হয়েছে।")}
-  catch(err){say(nice(err.message),true)}
-  busy(false);
-};
 $("lo").onclick=()=>{Mela.signOut();say("লগ আউট হয়েছে।");view()};
 
 /* saved delivery details */
@@ -102,7 +67,7 @@ $("clr").onclick=async()=>{
 
 /* password-reset link: the token arrives in the #hash */
 const hp=new URLSearchParams(location.hash.slice(1));
-if(hp.get("error_description"))say("লিংকটির মেয়াদ শেষ বা আগেই ব্যবহার হয়েছে। আবার \"পাসওয়ার্ড ভুলে গেছেন\" চাপুন।",true);
+if(hp.get("error_description"))say("লিংকটির মেয়াদ শেষ বা আগেই ব্যবহার হয়েছে। লগইন পেজে \"পাসওয়ার্ড ভুলে গেছেন\" আবার চাপুন।",true);
 if(hp.get("type")==="recovery"&&hp.get("access_token"))$("rec").hidden=false;
 $("rf").onsubmit=async e=>{
   e.preventDefault();

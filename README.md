@@ -8,7 +8,9 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 - `wishlist.html` — saved products
 - `cart.html` — cart review + delivery form (cash on delivery); the order is saved in Supabase
 - `order-placed.html` — order confirmation
-- `account.html` — customer login (email + password), password reset, saved delivery details, order history
+- `login.html` — customer login (email + password) and password-reset request
+- `signup.html` — create a customer account
+- `account.html` — account page: saved delivery details, order history, log out, password-reset form
 - `admin.html` — shop owner panel: orders and their status, products and stock, categories (only accounts listed in the `admins` table get in)
 
 ## Shared files
@@ -33,10 +35,10 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 6. [`6.security.md`](Doc/6.security.md) — security checklist and status
 7. [`7.testing.md`](Doc/7.testing.md) — test plan
 8. [`8.deployment.md`](Doc/8.deployment.md) — environments, changes, rollback, backups, go-live checklist
-9. [`9.auth.md`](Doc/9.auth.md) — customer login design, Supabase settings to change, login tests
+9. [`9.auth.md`](Doc/9.auth.md) — customer login and sign-up pages, Supabase settings to change, login tests
 10. [`10.admin.md`](Doc/10.admin.md) — admin panel, first admin, order status rules, tests and results
 11. [`11.orders-safety.md`](Doc/11.orders-safety.md) — stock, duplicate-order protection, spam limit, tests
 - [`Boundary.md`](Doc/Boundary.md) — known limits to fix before launch
 
 ## Next
-Show guest customers the real status of their orders; then phase F (payments, notifications) and the launch checklist.
+Phase F (payments, notifications, showing guests their real order status) and the launch checklist.
