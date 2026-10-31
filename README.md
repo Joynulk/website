@@ -22,9 +22,10 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 ## How data flows
 - Products and categories are read from Supabase. A built-in copy in `mela.js` shows first, and the last downloaded copy is cached in the browser.
 - Checkout calls the `place_order` database function. It recomputes every price on the server, takes the stock, and refuses sold-out products. The same checkout sent twice creates one order, and one phone number can place at most 3 orders per hour. Logged-in customers' orders are linked to their account; ordering without login still works.
+- When an order is complete a database trigger sends the owner a Telegram message (order number, items, total; no customer details). The bot token and chat id live in Supabase Vault, never in this repo.
 - After an order is created only its status can change, and only along allowed steps (pending -> shipped -> delivered, or cancelled); each change is logged in `order_events`, and cancelling puts the items back into stock.
 - Cart and wishlist stay in the browser's localStorage: `mela_cart`, `mela_wish`, `mela_order`, `mela_orders`, `mela_user`, `mela_catalog`, `mela_order_key`, and `mela_session` while logged in.
-- The Supabase URL and publishable key in `mela.js` are public by design. Access is limited by the row level security rules in `schema.sql`. Never put a `service_role` or secret key in this repo.
+- The Supabase URL and publishable key in `mela.js` are public by design. Access is limited by the row level security rules in `schema.sql`. Never put a `service_role` or secret key, or a Telegram bot token, in this repo.
 
 ## Docs (`Doc/`)
 1. [`1.plan.md`](Doc/1.plan.md) — goals, decisions, status, phases, what is skipped
@@ -38,7 +39,8 @@ Single-vendor e-commerce website. Static pages (no build step) with a Supabase d
 9. [`9.auth.md`](Doc/9.auth.md) — customer login and sign-up pages, Supabase settings to change, login tests
 10. [`10.admin.md`](Doc/10.admin.md) — admin panel, first admin, order status rules, tests and results
 11. [`11.orders-safety.md`](Doc/11.orders-safety.md) — stock, duplicate-order protection, spam limit, tests
+12. [`12.notifications.md`](Doc/12.notifications.md) — Telegram message for new orders: setup steps (owner), limits, tests
 - [`Boundary.md`](Doc/Boundary.md) — known limits to fix before launch
 
 ## Next
-Phase F (payments, notifications, showing guests their real order status) and the launch checklist.
+Owner sets up the Telegram bot ([12.notifications.md](Doc/12.notifications.md)); then showing guests their real order status, and the launch checklist. Online payment waits for a merchant account.
