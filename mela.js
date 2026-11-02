@@ -199,8 +199,7 @@ function toast(t){
 function pageSetup(){
   const hd=document.head;
   if(!hd.querySelector('meta[name="theme-color"]')){
-    [["#fbf3e4","(prefers-color-scheme: light)"],["#1a1226","(prefers-color-scheme: dark)"]].forEach(([c,m])=>{
-      const e=document.createElement("meta");e.name="theme-color";e.content=c;e.media=m;hd.appendChild(e)});
+    const e=document.createElement("meta");e.name="theme-color";e.content="#000000";hd.appendChild(e);
   }
   if(!hd.querySelector('link[href="https://fonts.gstatic.com"]')){
     const l=document.createElement("link");l.rel="preconnect";l.href="https://fonts.gstatic.com";l.crossOrigin="";hd.appendChild(l);
@@ -230,7 +229,8 @@ function header(active){
     const a=(href,key,ico,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}><span aria-hidden="true">${ico}</span><span class="t">&nbsp;${t}</span>${extra}</a>`;
     h.innerHTML=`<a class="logo" href="index.html">মেলা</a><nav class="nv" aria-label="প্রধান মেনু">${a("shop.html","shop","🛍️","দোকান")}${a("wishlist.html","wish","♡","প্রিয়")}${a("account.html","acc","👤","অ্যাকাউন্ট")}${a("cart.html","cart","🛒","কার্ট",`<b class="bd" id="cb">${bn(cartCount())}</b>`)}</nav>`;
   }
-  const f=$("ft");if(f)f.innerHTML="© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত";
+  const f=$("ft");
+  if(f)f.innerHTML=`<div class="fg"><div><h4>কেনাকাটা</h4><a href="shop.html">সব পণ্য</a><a href="wishlist.html">প্রিয় তালিকা</a><a href="cart.html">কার্ট</a></div><div><h4>অ্যাকাউন্ট</h4><a href="account.html">আমার অ্যাকাউন্ট</a><a href="login.html">লগইন</a><a href="signup.html">নতুন অ্যাকাউন্ট</a></div><div><h4>সহায়তা</h4><a href="about.html">আমাদের কথা</a><a href="policy.html">ডেলিভারি ও ফেরত</a><a href="help.html">প্রশ্নোত্তর</a></div></div><p class="fl">© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</p>`;
 }
 
 /* product card used by shop, wishlist and product pages */
