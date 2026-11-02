@@ -3,6 +3,9 @@
 #hd .mbtn:active{transform:scale(.92)}
 #hd .logo{margin-right:auto}
 
+/* phones: the slide menu replaces the icon links (shop, wishlist, account, cart) */
+@media(max-width:640px){#hd .nv{display:none}}
+
 .smo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.45);opacity:0;visibility:hidden;overscroll-behavior:contain;transition:opacity .3s,visibility 0s .3s}
 .smo.on{opacity:1;visibility:visible;transition:opacity .3s}
 
