@@ -231,6 +231,10 @@ function header(active){
   }
   const f=$("ft");
   if(f)f.innerHTML=`<div class="fg"><div><h4>কেনাকাটা</h4><a href="shop.html">সব পণ্য</a><a href="wishlist.html">প্রিয় তালিকা</a><a href="cart.html">কার্ট</a></div><div><h4>অ্যাকাউন্ট</h4><a href="account.html">আমার অ্যাকাউন্ট</a><a href="login.html">লগইন</a><a href="signup.html">নতুন অ্যাকাউন্ট</a></div><div><h4>সহায়তা</h4><a href="about.html">আমাদের কথা</a><a href="policy.html">ডেলিভারি ও ফেরত</a><a href="help.html">প্রশ্নোত্তর</a></div></div><p class="fl">© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</p>`;
+  /* slide menu (hamburger + left drawer) lives in menu.js / menu.css */
+  if(h&&!document.querySelector('script[src="menu.js"]')){
+    const s=document.createElement("script");s.src="menu.js";document.body.appendChild(s);
+  }
 }
 
 /* product card used by shop, wishlist and product pages */
