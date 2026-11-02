@@ -1,13 +1,13 @@
-<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>কার্ট — মেলা</title></head><body>
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>কার্ট — মেলা</title></head><body>
 <header id="hd"></header>
-<main><h2>আপনার কার্ট</h2><div id="lines"></div>
+<main><h2>আপনার কার্ট</h2><div id="lines"></div><p class="note" id="un" role="status"></p>
 <div class="sum"><div><span>পণ্যের দাম</span><span id="sub"></span></div><div><span>ডেলিভারি (২০০০ টাকার নিচে)</span><span id="ship"></span></div><div class="t"><span>মোট</span><span id="tot"></span></div></div>
 <h2>ডেলিভারির ঠিকানা</h2>
 <p class="note" id="lg"></p>
-<form id="f"><label for="nm">নাম</label><input id="nm" required autocomplete="name">
-<label for="ph">মোবাইল নম্বর</label><input id="ph" required inputmode="numeric" pattern="01[3-9][0-9]{8}" title="১১ সংখ্যার বাংলাদেশি নম্বর, যেমন 017XXXXXXXX" autocomplete="tel">
-<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" rows="3" required minlength="5" autocomplete="street-address"></textarea>
-<label class="chk"><input type="checkbox" id="sv" checked> পরের বার জন্য আমার তথ্য মনে রাখুন</label>
+<form id="f"><label for="nm">নাম</label><input id="nm" name="name" required autocomplete="name">
+<label for="ph">মোবাইল নম্বর</label><input id="ph" name="phone" type="tel" required inputmode="numeric" pattern="01[3-9][0-9]{8}" title="১১ সংখ্যার বাংলাদেশি নম্বর, যেমন 017XXXXXXXX" autocomplete="tel">
+<label for="ad">পূর্ণ ঠিকানা</label><textarea id="ad" name="address" rows="3" required minlength="5" autocomplete="street-address"></textarea>
+<label class="chk"><input type="checkbox" id="sv" name="save" checked> পরের বার জন্য আমার তথ্য মনে রাখুন</label>
 <p class="note" id="err" role="alert" style="color:var(--red)"></p>
 <button class="btn" id="go" type="submit">অর্ডার নিশ্চিত করুন (ক্যাশ অন ডেলিভারি)</button></form></main>
 <footer id="ft"></footer>
@@ -24,9 +24,21 @@ else $("lg").innerHTML='লগইন ছাড়াও অর্ডার ক�
 function draw(){
   L=L.filter(l=>l.q>0);Mela.set("mela_cart",L);Mela.refreshBadge();
   const sub=L.reduce((s,l)=>s+l.pr*l.q,0),sh=fee(sub);
-  $("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
+  $("lines").innerHTML=L.length?L.map((l,i)=>`<div class="row"><i aria-hidden="true">${esc(l.e)}</i><div>${esc(l.n)}<br><small>${tk(l.pr)}</small></div><button data-m="${i}" aria-label="${esc(l.n)} কমান">−</button><b>${bn(l.q)}</b><button data-p="${i}" aria-label="${esc(l.n)} বাড়ান">+</button></div>`).join(""):'<p class="empty">কার্ট খালি। <a href="shop.html">কেনাকাটা শুরু করুন</a></p>';
   $("sub").textContent=tk(sub);$("ship").textContent=sh?tk(sh):"বিনামূল্যে";$("tot").textContent=tk(sub+sh);$("go").disabled=!L.length;
 }
+/* removing the last piece of an item can be undone for a few seconds */
+let rm=null,rt;
+function undoBar(l,i){
+  rm={l:{...l},i};const un=$("un");
+  un.innerHTML=esc(l.n)+' কার্ট থেকে সরানো হয়েছে। <button type="button" class="chip" id="ub">ফিরিয়ে আনুন</button>';
+  clearTimeout(rt);rt=setTimeout(()=>{rm=null;un.textContent=""},6000);
+}
+$("un").onclick=e=>{
+  if(e.target.id!=="ub"||!rm)return;
+  L.splice(Math.min(rm.i,L.length),0,{...rm.l,q:1});
+  rm=null;clearTimeout(rt);$("un").textContent="";draw();
+};
 /* keep the cart equal to the shop: current prices, no products that are gone.
    With fresh data (fresh=true) quantities are also cut down to the stock left. */
 function sync(fresh){
@@ -38,10 +50,16 @@ function sync(fresh){
   }
   draw();
 }
-$("lines").onclick=e=>{const m=e.target.dataset.m,p=e.target.dataset.p;if(m!==undefined)L[m].q--;if(p!==undefined)L[p].q++;draw()};
+$("lines").onclick=e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const m=b.dataset.m,p=b.dataset.p;
+  if(m!==undefined){if(L[m].q===1)undoBar(L[m],+m);L[m].q--}
+  if(p!==undefined)L[p].q++;
+  draw();
+};
 function oops(m){
-  if(/too many orders/.test(m))return"এই ফোন নম্বর থেকে ঘণ্টায় 3টির বেশি অর্ডার নেওয়া হয় না। কিছুক্ষণ পর আবার চেষ্টা করুন।";
-  if(/out of stock/.test(m))return"কিছু পণ্যের stock এখন যথেষ্ট নেই। কার্ট ঠিক করে দেওয়া হয়েছে, আবার দেখে অর্ডার করুন।";
+  if(/too many orders/.test(m))return"এই ফোন নম্বর থেকে ঘণ্টায় ৩টির বেশি অর্ডার নেওয়া হয় না। কিছুক্ষণ পর আবার চেষ্টা করুন।";
+  if(/out of stock/.test(m))return"কিছু পণ্যের স্টক এখন যথেষ্ট নেই। কার্ট ঠিক করে দেওয়া হয়েছে, আবার দেখে অর্ডার করুন।";
   if(/product not found/.test(m))return"কোনো পণ্য আর পাওয়া যাচ্ছে না। কার্ট ঠিক করে দেওয়া হয়েছে, আবার দেখুন।";
   return"অর্ডার পাঠানো যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
 }

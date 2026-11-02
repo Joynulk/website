@@ -195,8 +195,36 @@ function toast(t){
   el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1600);
 }
 
+/* page-level accessibility and head tags shared by every page that uses header() */
+function pageSetup(){
+  const hd=document.head;
+  if(!hd.querySelector('meta[name="theme-color"]')){
+    [["#fbf3e4","(prefers-color-scheme: light)"],["#1a1226","(prefers-color-scheme: dark)"]].forEach(([c,m])=>{
+      const e=document.createElement("meta");e.name="theme-color";e.content=c;e.media=m;hd.appendChild(e)});
+  }
+  if(!hd.querySelector('link[href="https://fonts.gstatic.com"]')){
+    const l=document.createElement("link");l.rel="preconnect";l.href="https://fonts.gstatic.com";l.crossOrigin="";hd.appendChild(l);
+  }
+  const m=document.querySelector("main");
+  if(m){
+    if(!m.id)m.id="main";
+    if(!document.querySelector(".skip")){
+      const s=document.createElement("a");s.className="skip";s.href="#"+m.id;s.textContent="মূল অংশে যান";
+      document.body.insertBefore(s,document.body.firstChild);
+    }
+    /* pages open with an h2: tell assistive tech it is the page's main heading */
+    if(!m.querySelector("h1")){
+      const h=[...m.querySelectorAll("h2")].find(x=>!x.closest("[hidden]"));
+      if(h)h.setAttribute("aria-level","1");
+    }
+  }
+  /* every form control gets a name (same as its id) so browsers can autofill it */
+  document.querySelectorAll("input[id],select[id],textarea[id]").forEach(e=>{if(!e.name&&e.type!=="hidden")e.name=e.id});
+}
+
 /* shared header + footer */
 function header(active){
+  pageSetup();
   const h=$("hd");
   if(h){
     const a=(href,key,ico,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}><span aria-hidden="true">${ico}</span><span class="t">&nbsp;${t}</span>${extra}</a>`;
