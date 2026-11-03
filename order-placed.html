@@ -3,8 +3,9 @@
 <main id="m"><div class="ok" aria-hidden="true">🎉</div><h2 style="text-align:center">ধন্যবাদ! অর্ডার পাওয়া গেছে</h2>
 <p id="info" style="text-align:center;color:var(--mute)"></p><div id="ls"></div>
 <div class="sum"><div class="t"><span>মোট (ক্যাশ অন ডেলিভারি)</span><span id="tot"></span></div></div>
-<a class="btn" href="shop.html">আবার কেনাকাটা করুন</a>
-<a class="btn alt" href="account.html">আমার অর্ডার দেখুন</a></main>
+<a class="btn" id="trk" href="track.html">অর্ডারের অবস্থা দেখুন</a>
+<a class="btn alt" href="shop.html">আবার কেনাকাটা করুন</a>
+<a class="btn alt" href="account.html">আমার অ্যাকাউন্ট</a></main>
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
@@ -15,5 +16,6 @@ else{
   $("info").textContent="অর্ডার নম্বর "+o.id+" · "+o.name+" · "+o.phone;
   $("ls").innerHTML=o.lines.map(l=>`<div class="row"><i>${esc(l.e)}</i><div>${esc(l.n)}</div><b>${bn(l.q)} × ${tk(l.pr)}</b></div>`).join("");
   $("tot").textContent=tk(o.total);
+  $("trk").href="track.html?id="+encodeURIComponent(o.id);
 }
 </script></body></html>

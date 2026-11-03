@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>অর্ডার ট্র্যাক — মেলা</title>
+<style>
+.st-pending{background:#fff4d6;color:#7a5200}.st-shipped{background:#e3effd;color:#0a4a99}.st-delivered{background:#e1f5e7;color:#14602b}.st-cancelled{background:#ececef;color:#5a5a60}
+@media(prefers-color-scheme:dark){.st-pending{background:#3a2e0a;color:#f3c969}.st-shipped{background:#0f2a47;color:#8fc2ff}.st-delivered{background:#0f2f1a;color:#7fd99a}.st-cancelled{background:#232323;color:#a1a1a6}}
+.tl{list-style:none;margin:14px 0;padding:0}
+.tl li{position:relative;padding:0 0 18px 30px;color:var(--mute)}
+.tl li::before{content:"";position:absolute;left:3px;top:6px;width:14px;height:14px;border-radius:50%;border:2px solid var(--bd);background:var(--paper)}
+.tl li::after{content:"";position:absolute;left:9px;top:22px;bottom:-2px;width:2px;background:var(--line)}
+.tl li:last-child{padding-bottom:0}.tl li:last-child::after{display:none}
+.tl li.done{color:var(--ink)}.tl li.done::before{background:var(--primary);border-color:var(--primary)}
+.tl li.bad::before{background:var(--red);border-color:var(--red)}
+.tl small{display:block;color:var(--mute);font-size:14px}
+.rl{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rl button{min-height:40px;padding:0 16px;border:1px solid var(--bd);border-radius:980px;background:none;color:var(--link);font:inherit;cursor:pointer}
+</style></head><body>
+<header id="hd"></header>
+<main><h2>অর্ডার ট্র্যাক করুন</h2>
+<p class="note">অর্ডার নম্বর আর অর্ডারে দেওয়া মোবাইল নম্বর দিন। লগইন লাগবে না।</p>
+<form id="tf"><label for="ti">অর্ডার নম্বর</label><input id="ti" name="order" placeholder="M000001" autocomplete="off" autocapitalize="characters" maxlength="12" required>
+<label for="tp">মোবাইল নম্বর</label><input id="tp" name="phone" type="tel" inputmode="numeric" maxlength="11" autocomplete="tel" required>
+<p class="note" id="te" role="alert" style="color:var(--red)"></p>
+<button class="btn" id="tg" type="submit">অবস্থা দেখুন</button></form>
+<div id="res" aria-live="polite"></div>
+<section id="rec" hidden><h2>আপনার সাম্প্রতিক অর্ডার</h2><div id="rl"></div></section></main>
+<footer id="ft"></footer>
+<script src="mela.js"></script>
+<script>
+const {$,bn,tk,esc,STATUS}=Mela;Mela.header("");
+const DIG="০১২৩৪৫৬৭৮৯";
+const en=s=>String(s).replace(/[০-৯]/g,d=>DIG.indexOf(d)).trim();
+const fd=d=>{try{return new Date(d).toLocaleString("bn-BD",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}catch(e){return""}};
+const RANK={pending:0,shipped:1,delivered:2};
+
+async function look(id,phone){
+  return Mela.request("rpc/track_order",{method:"POST",body:JSON.stringify({p_id:id,p_phone:phone})});
+}
+function view(r){
+  const ev={};(r.events||[]).forEach(e=>{ev[e.status]=e.at});
+  const cancelled=r.status==="cancelled";
+  const steps=cancelled
+    ?[["pending","অর্ডার হয়েছে",r.created_at,"done"],["cancelled","বাতিল হয়েছে",ev.cancelled,"done bad"]]
+    :[["pending","অর্ডার হয়েছে",r.created_at],["shipped","পাঠানো হয়েছে",ev.shipped],["delivered","পৌঁছেছে",ev.delivered]].map(s=>[...s,RANK[s[0]]<=RANK[r.status]?"done":""]);
+  return `<article class="ord"><div class="oh"><b>${esc(r.id)}</b><span class="st st-${esc(r.status)}">${esc(STATUS[r.status]||r.status)}</span></div>
+<ol class="tl">${steps.map(([k,t,at,c])=>`<li class="${c||""}"><b>${t}</b>${at&&c?`<small>${esc(fd(at))}</small>`:""}</li>`).join("")}</ol>
+<ul>${(r.items||[]).map(i=>`<li>${esc(i.emoji||"")} ${esc(i.name)} × ${bn(i.qty)}</li>`).join("")}</ul>
+<div class="ot">মোট: ${tk(r.total)} (ডেলিভারি ${tk(r.shipping)})</div></article>`;
+}
+async function run(id,phone){
+  const err=$("te"),btn=$("tg");err.textContent="";$("res").innerHTML="";
+  id=en(id).toUpperCase();phone=en(phone);
+  if(!/^M\d{6}$/.test(id)){err.textContent="অর্ডার নম্বর এভাবে লিখুন: M000001";return}
+  if(!/^01[3-9]\d{8}$/.test(phone)){err.textContent="১১ সংখ্যার বাংলাদেশি মোবাইল নম্বর দিন, যেমন 017XXXXXXXX";return}
+  btn.disabled=true;btn.textContent="খুঁজছি…";
+  try{
+    const r=await look(id,phone);
+    if(!r)err.textContent="এই নম্বর ও ফোনে কোনো অর্ডার মিলছে না। অর্ডারের সময় যে ফোন দিয়েছিলেন তাই দিন।";
+    else $("res").innerHTML=view(r);
+  }catch(e){err.textContent="লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।"}
+  btn.disabled=false;btn.textContent="অবস্থা দেখুন";
+}
+$("tf").onsubmit=e=>{e.preventDefault();run($("ti").value,$("tp").value)};
+
+/* orders placed from this browser: show their live status, so guests see changes too */
+const mine=Mela.orders().filter(o=>o&&o.id&&o.phone).slice(-5).reverse();
+const want=Mela.params().get("id");
+if(want){$("ti").value=want;const m=mine.find(o=>o.id===want);if(m){$("tp").value=m.phone;run(m.id,m.phone)}}
+if(mine.length){
+  $("rec").hidden=false;
+  $("rl").innerHTML=mine.map(o=>`<div class="rl" data-id="${esc(o.id)}"><div><b>${esc(o.id)}</b><br><small class="note">${esc(fd(o.date))} · ${tk(o.total)}</small></div><span class="st" data-s></span><button type="button" data-o="${esc(o.id)}" data-p="${esc(o.phone)}">দেখুন</button></div>`).join("");
+  $("rl").onclick=e=>{const b=e.target.closest("[data-o]");if(b){$("ti").value=b.dataset.o;$("tp").value=b.dataset.p;run(b.dataset.o,b.dataset.p);scrollTo({top:0,behavior:"smooth"})}};
+  mine.forEach(async o=>{
+    const el=document.querySelector('.rl[data-id="'+o.id+'"] [data-s]');
+    try{const r=await look(o.id,o.phone);if(r){el.className="st st-"+r.status;el.textContent=STATUS[r.status]||r.status}}catch(e){}
+  });
+}
+</script></body></html>
