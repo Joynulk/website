@@ -1,7 +1,7 @@
 -- 006: customers can check an order's status with the order number + the phone number used on it.
 -- Works for orders placed without login too (this closes the X7 gap in Doc/10.admin.md).
 -- Returns only status, items, totals and the status timeline: never the name, address or phone.
--- NOT YET APPLIED to the project. Run once in Supabase -> SQL Editor.
+-- Applied to the project on 2026-11-03 as mela_006_track_order.
 
 create or replace function track_order(p_id text, p_phone text) returns json
 language plpgsql security definer stable set search_path = public as $$
