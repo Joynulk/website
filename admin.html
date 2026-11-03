@@ -1,78 +1,178 @@
-<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600&family=Tiro+Bangla&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>Admin — মেলা</title>
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet"><title>Admin — মেলা</title>
 <style>
-select{width:100%;font:inherit;padding:10px 12px;border:2px solid var(--ink);border-radius:10px;background:var(--card);color:var(--ink)}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
-.tab{border:2px solid var(--ink);background:var(--card);color:var(--ink);border-radius:20px;padding:4px 16px;font:inherit;cursor:pointer}
-.tab.on{background:var(--gold);color:#2a1b3d;font-weight:600}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.acts2{display:flex;gap:8px;flex-wrap:wrap}.acts2 .btn{width:auto;flex:1 1 120px;margin-top:8px}
-.ord.off{opacity:.65}
-.addr{margin:4px 0;white-space:pre-wrap}
-.st-delivered{background:var(--green);color:#fff}.st-cancelled{background:var(--mute);color:#fff}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.top .btn{width:auto;margin-top:0;padding:6px 14px}
-code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 6px;word-break:break-all}
+:root{color-scheme:light dark;--g:#fff;--ink:#1d1d1f;--mute:#6e6e73;--ln:#e5e5ea;--rl:#efeff2;--ct:#c7c7cc;--pri:#1d1d1f;--onp:#fff;--lk:#0066cc;--fc:#0071e3;--red:#c4241a;--s1b:#fff4d6;--s1:#7a5200;--s2b:#e3effd;--s2:#0a4a99;--s3b:#e1f5e7;--s3:#14602b;--s4b:#ececef;--s4:#5a5a60;--s5b:#fde8e6;--s5:#9b1c12}
+@media(prefers-color-scheme:dark){:root{--g:#000;--ink:#f5f5f7;--mute:#a1a1a6;--ln:#2e2e2e;--rl:#1f1f1f;--ct:#48484a;--pri:#f5f5f7;--onp:#000;--lk:#2997ff;--fc:#2997ff;--red:#ff6961;--s1b:#3a2e0a;--s1:#f3c969;--s2b:#0f2a47;--s2:#8fc2ff;--s3b:#0f2f1a;--s3:#7fd99a;--s4b:#232323;--s4:#a1a1a6;--s5b:#3d1512;--s5:#ff8a80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--g);color:var(--ink);font:400 15px/1.5 -apple-system,BlinkMacSystemFont,"Hind Siliguri","Noto Sans Bengali",system-ui,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1{margin:0;font-size:24px;font-weight:600;line-height:1.3}
+a{color:var(--lk)}small{font-size:13px;color:var(--mute)}
+:focus-visible{outline:2px solid var(--fc);outline-offset:2px}
+button,input,select,textarea,summary,a{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.skip{position:absolute;left:8px;top:-100px;z-index:100;background:var(--ink);color:var(--g);padding:10px 16px;border-radius:8px;text-decoration:none}.skip:focus{top:8px}
+
+/* shell: top bar + bottom tabs on phones, sidebar on wide screens */
+.app{min-height:100dvh;display:flex;flex-direction:column}
+.side{display:none}
+.bar{position:sticky;top:0;z-index:10;height:48px;display:flex;align-items:center;gap:10px;padding:0 16px;background:var(--g);border-bottom:1px solid var(--ln)}
+.bar b{font-size:18px}.bar span{flex:1;color:var(--mute)}
+.mn{flex:1;min-width:0}
+main{max-width:1040px;margin:0 auto;padding:20px 16px 96px}
+.hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;background:var(--g);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabbar button{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:0;background:none;color:var(--mute);font:inherit;font-size:12px;position:relative;cursor:pointer}
+.tabbar button[aria-current=page]{color:var(--ink);font-weight:600}
+.nv svg{flex:none}
+.cn{font-style:normal;min-width:20px;padding:0 6px;border-radius:10px;background:var(--s4b);color:var(--ink);font-size:12px;line-height:20px;text-align:center}.cn:empty{display:none}
+.tabbar .cn{position:absolute;top:6px;left:calc(50% + 8px)}
+@media(min-width:1024px){
+ .app{flex-direction:row}
+ .side{display:flex;flex-direction:column;gap:16px;position:sticky;top:0;height:100dvh;width:232px;flex:none;padding:20px 12px;border-right:1px solid var(--ln)}
+ .bar,.tabbar{display:none}
+ main{padding:32px 32px 64px}
+}
+.brand{display:flex;align-items:baseline;gap:8px;padding:0 10px}.brand b{font-size:21px}.brand span{color:var(--mute);font-size:14px}
+.side .nv{display:flex;flex-direction:column;gap:2px;flex:1}
+.side .nv button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:0 10px;border:0;border-radius:8px;background:none;color:var(--mute);font:inherit;text-align:left;cursor:pointer}
+.side .nv button[aria-current=page]{background:var(--rl);color:var(--ink);font-weight:600}
+.side .nv .cn{margin-left:auto}
+.acct{display:flex;flex-direction:column;gap:8px;padding:0 10px;font-size:14px}.acct .em{color:var(--mute);word-break:break-all}.acct a{width:fit-content}
+
+/* buttons, pills, forms */
+.b{min-height:40px;padding:0 16px;border:1px solid var(--ct);border-radius:8px;background:none;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.b.p{background:var(--pri);color:var(--onp);border-color:var(--pri)}
+.b.t{border-color:transparent;color:var(--mute)}
+.b:active{transform:scale(.97)}.b:disabled{opacity:.4;cursor:not-allowed}
+@media(hover:hover){.b:hover{background:var(--rl)}.b.p:hover{opacity:.85;background:var(--pri)}.b.t:hover{color:var(--red)}}
+.pill{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:11px;font-size:13px;white-space:nowrap}
+.s-pending{background:var(--s1b);color:var(--s1)}.s-shipped{background:var(--s2b);color:var(--s2)}.s-delivered{background:var(--s3b);color:var(--s3)}.s-cancelled,.s-neutral{background:var(--s4b);color:var(--s4)}.s-out{background:var(--s5b);color:var(--s5)}
+label{display:block;margin:12px 0 4px;font-size:13px;color:var(--mute)}
+input,select,textarea{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--ct);border-radius:8px;background:var(--g);color:var(--ink);font:inherit;font-size:16px}
+input:focus,select:focus,textarea:focus{border-color:var(--fc)}
+input[type=color]{padding:3px}
+.ck{display:flex;gap:10px;align-items:center;color:var(--ink);font-size:15px}.ck input{width:20px;height:20px;min-height:0}
+.fg2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}@media(max-width:560px){.fg2{grid-template-columns:1fr}}
+.nt{margin:8px 0 0;font-size:13px;color:var(--mute)}
+code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:break-all;font-size:13px}
+
+/* figures, filters, lists */
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:0 0 16px;border:1px solid var(--ln);border-radius:12px;background:var(--ln);overflow:hidden}
+.kpi.k3{grid-template-columns:repeat(3,1fr)}
+.kpi div{padding:14px 16px;background:var(--g)}
+.kpi dt{font-size:13px;color:var(--mute)}.kpi dd{margin:2px 0 0;font-size:26px;font-weight:600;line-height:1.3}
+@media(max-width:640px){.kpi,.kpi.k3{grid-template-columns:1fr 1fr}.kpi div:last-child:nth-child(odd){grid-column:1/-1}.kpi dd{font-size:22px}}
+.fl{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 12px;padding:2px 16px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.fl::-webkit-scrollbar{display:none}
+.fl button{flex:none;min-height:40px;padding:0 14px;border:1px solid var(--ct);border-radius:980px;background:none;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.fl button[aria-pressed=true]{background:var(--ink);color:var(--g);border-color:var(--ink)}
+.list{list-style:none;margin:0;padding:0;border:1px solid var(--ln);border-radius:12px}
+.list>li{border-top:1px solid var(--rl)}.list>li:first-child{border-top:0}
+.em0{padding:32px 16px;text-align:center;color:var(--mute)}
+.o,.r{display:grid;gap:4px 16px;padding:14px 16px}
+.o{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"id tt" "cu cu" "it it" "ad ad" "st ac"}
+.id{grid-area:id;display:flex;flex-direction:column}.cu{grid-area:cu}.it{grid-area:it;color:var(--mute);font-size:14px}.tt{grid-area:tt;display:flex;flex-direction:column;align-items:flex-end}
+.ad{grid-area:ad;color:var(--mute);font-size:14px;white-space:pre-wrap}.st{grid-area:st;align-self:center}.ac{grid-area:ac;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.r{align-items:center;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"a p" "b b" "s x"}
+.ra{grid-area:a;font-weight:600}.rb{grid-area:b;color:var(--mute);font-size:14px}.rp{grid-area:p;text-align:right;font-weight:600}.rs{grid-area:s;display:flex;gap:6px;flex-wrap:wrap}.rx{grid-area:x;display:flex;gap:8px;justify-content:flex-end}
+.r.off .ra{opacity:.6}
+.sw{display:inline-block;width:16px;height:16px;border-radius:50%;border:1px solid var(--ct);vertical-align:-3px}
+@media(min-width:900px){
+ .o{grid-template-columns:150px minmax(0,1fr) minmax(0,1.2fr) 150px;grid-template-areas:"id cu it tt" "st ad ad ac";align-items:start}
+ .r{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 100px 150px auto;grid-template-areas:"a b p s x"}
+}
+.pn{margin-bottom:16px;border:1px solid var(--ln);border-radius:12px}
+.pn>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 16px;font-weight:600;cursor:pointer}.pn>summary::-webkit-details-marker{display:none}
+.pn>summary::after{content:"+";color:var(--mute);font-size:20px}.pn[open]>summary::after{content:"−"}
+.pn form{padding:0 16px 16px;border-top:1px solid var(--rl)}
+.pn .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.gate{max-width:380px;margin:10vh auto 0;padding:0 16px}.gate h1{margin:16px 0 8px}.gate .b{margin-top:16px;width:100%}
+.toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translate(-50%,24px);opacity:0;background:var(--ink);color:var(--g);padding:10px 18px;border-radius:8px;transition:transform .25s,opacity .25s;z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast.on{transform:translate(-50%,0);opacity:1}
+@media(min-width:1024px){.toast{bottom:24px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style></head><body>
-<header id="hd"></header>
-<main class="wide" id="app"><p class="note">লোড হচ্ছে…</p></main>
-<footer id="ft"></footer>
+<a class="skip" href="#main">মূল অংশে যান</a>
+<div id="root"><p style="padding:24px">লোড হচ্ছে…</p></div>
 <script src="mela.js"></script>
 <script>
 const {$,bn,tk,esc,STATUS}=Mela;Mela.header("");
-const app=$("app"),api=Mela.request;
+const root=$("root"),api=Mela.request;
 const NEXT={pending:["shipped","cancelled"],shipped:["delivered","cancelled"],delivered:[],cancelled:[]};
 const BTN={shipped:"পাঠানো হয়েছে",delivered:"পৌঁছেছে",cancelled:"বাতিল করুন"};
-const LOAD='<p class="note">লোড হচ্ছে…</p>';
-const FAIL='<p class="note" style="color:var(--red)">লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।</p>';
+const LOAD='<p class="nt">লোড হচ্ছে…</p>';
+const FAIL='<p class="nt" style="color:var(--red)">লোড করা যায়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।</p><button class="b" type="button" data-retry>আবার চেষ্টা করুন</button>';
 const fd=d=>{try{return new Date(d).toLocaleString("bn-BD",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})}catch(e){return""}};
+const svg=p=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const IC={
+  orders:svg('<path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M8 9h8M8 13h6"/>'),
+  products:svg('<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'),
+  cats:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')
+};
+const NAV=[["orders","অর্ডার"],["products","পণ্য"],["cats","ক্যাটাগরি"]];
+const TITLE=Object.fromEntries(NAV);
+const navBtns=NAV.map(([k,t])=>`<button type="button" data-t="${k}">${IC[k]}<span>${t}</span>${k==="orders"?'<i class="cn" data-pend></i>':""}</button>`).join("");
 let tab="orders",ofilter="";
 
 async function start(){
   if(!Mela.session()){gate();return}
   let ok=false;
-  try{ok=await Mela.isAdmin()}catch(e){app.innerHTML=FAIL;return}
+  try{ok=await Mela.isAdmin()}catch(e){root.innerHTML='<main class="gate" id="main">'+FAIL+'</main>';return}
   if(!ok){denied();return}
   shell();
 }
 function gate(){
-  app.innerHTML=`<h2>Admin লগইন</h2><form id="gf"><label for="ge">ইমেইল</label><input id="ge" type="email" required autocomplete="email"><label for="gp">পাসওয়ার্ড</label><input id="gp" type="password" required autocomplete="current-password"><p class="note" id="gm" role="alert" style="color:var(--red)"></p><button class="btn" type="submit">লগইন</button></form>`;
+  root.innerHTML=`<main class="gate" id="main"><div class="brand" style="padding:0"><b>মেলা</b><span>Admin</span></div><h1>লগইন</h1><form id="gf"><label for="ge">ইমেইল</label><input id="ge" name="email" type="email" required autocomplete="email"><label for="gp">পাসওয়ার্ড</label><input id="gp" name="password" type="password" required autocomplete="current-password"><p class="nt" id="gm" role="alert" style="color:var(--red)"></p><button class="b p" type="submit">লগইন</button></form></main>`;
   $("gf").onsubmit=async e=>{e.preventDefault();
     try{await Mela.signIn($("ge").value.trim(),$("gp").value);start()}
     catch(err){$("gm").textContent="লগইন হয়নি। ইমেইল ও পাসওয়ার্ড দেখুন।"}};
 }
 function denied(){
   const s=Mela.session(),em=(s&&s.user&&s.user.email)||"";
-  app.innerHTML=`<h2>অনুমতি নেই</h2><p>এই অ্যাকাউন্ট (${esc(em)}) admin নয়।</p><p class="note">দোকানের মালিক হলে Supabase SQL Editor-এ একবার চালান:<br><code>insert into admins(user_id) select id from auth.users where email = '${esc(em)}';</code></p><button class="btn alt" id="lo" type="button">লগ আউট</button>`;
+  root.innerHTML=`<main class="gate" id="main"><div class="brand" style="padding:0"><b>মেলা</b><span>Admin</span></div><h1>অনুমতি নেই</h1><p>এই অ্যাকাউন্ট (${esc(em)}) admin নয়।</p><p class="nt">দোকানের মালিক হলে Supabase SQL Editor-এ একবার চালান:<br><code>insert into admins(user_id) select id from auth.users where email = '${esc(em)}';</code></p><button class="b" id="lo" type="button">লগ আউট</button></main>`;
   $("lo").onclick=()=>{Mela.signOut();location.reload()};
 }
 function shell(){
-  const s=Mela.session();
-  app.innerHTML=`<div class="top"><h2>Admin panel</h2><span class="note">${esc((s.user&&s.user.email)||"")} <button class="btn alt" id="lo" type="button">লগ আউট</button></span></div>
-<div class="tabs" role="tablist"><button class="tab" data-t="orders" role="tab">অর্ডার</button><button class="tab" data-t="products" role="tab">পণ্য</button><button class="tab" data-t="cats" role="tab">ক্যাটাগরি</button></div><div id="pane"></div>`;
-  $("lo").onclick=()=>{Mela.signOut();location.reload()};
-  app.querySelector(".tabs").onclick=e=>{const b=e.target.closest("[data-t]");if(b){tab=b.dataset.t;show()}};
+  const s=Mela.session(),em=esc((s.user&&s.user.email)||"");
+  root.innerHTML=`<div class="app"><aside class="side"><div class="brand"><b>মেলা</b><span>Admin</span></div><nav class="nv" aria-label="Admin মেনু">${navBtns}</nav><div class="acct"><span class="em">${em}</span><a href="index.html">দোকান দেখুন</a><button type="button" class="b" data-lo>লগ আউট</button></div></aside><div class="mn"><header class="bar"><b>মেলা</b><span>Admin</span><button type="button" class="b t" data-lo>লগ আউট</button></header><main id="main"><div class="hd"><h1 id="ttl"></h1></div><div id="pane"></div></main></div><nav class="tabbar nv" aria-label="Admin মেনু">${navBtns}</nav></div>`;
+  root.onclick=e=>{
+    const t=e.target.closest("[data-t]");
+    if(t){tab=t.dataset.t;show();return}
+    if(e.target.closest("[data-lo]")){Mela.signOut();location.reload();return}
+    if(e.target.closest("[data-retry]"))show();
+  };
   show();
 }
 function show(){
-  [...app.querySelectorAll(".tab")].forEach(b=>{const on=b.dataset.t===tab;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});
+  document.querySelectorAll("[data-t]").forEach(b=>b.setAttribute("aria-current",b.dataset.t===tab?"page":"false"));
+  $("ttl").textContent=TITLE[tab]===undefined?"":NAV.find(n=>n[0]===tab)[1];
+  document.title=NAV.find(n=>n[0]===tab)[1]+" — Admin — মেলা";
   ({orders:ordersPane,products:productsPane,cats:catsPane})[tab]();
 }
 const swap=()=>{const p=$("pane"),n=p.cloneNode(false);p.replaceWith(n);return n}; /* fresh element so old click handlers go away */
+const kpi=(items,c)=>`<dl class="kpi${c?" "+c:""}">${items.map(([t,v])=>`<div><dt>${t}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
 
 /* ---------- orders ---------- */
 async function ordersPane(){
   const pane=swap();pane.innerHTML=LOAD;
   try{
-    const q="orders?select=id,name,phone,address,shipping,total,status,created_at,order_items(name,emoji,qty)&order=created_at.desc&limit=100"+(ofilter?"&status=eq."+ofilter:"");
-    const L=await api(q);
-    const chips=[["","সব"],...Object.entries(STATUS)].map(([k,v])=>`<button class="chip${k===ofilter?" on":""}" data-f="${esc(k)}">${esc(v)}</button>`).join("");
-    pane.innerHTML=`<div class="chips">${chips}</div><p class="cnt">${bn(L.length)}টি অর্ডার${L.length===100?" (সর্বশেষ 100টি)":""}</p>`+(L.map(o=>`<article class="ord"><div class="oh"><b>${esc(o.id)}</b><span class="st st-${esc(o.status)}">${esc(STATUS[o.status]||o.status)}</span></div><small>${esc(fd(o.created_at))} · ${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></small><p class="addr">${esc(o.address)}</p><ul>${(o.order_items||[]).map(i=>`<li>${esc(i.emoji||"")} ${esc(i.name)} × ${bn(i.qty)}</li>`).join("")}</ul><div class="ot">মোট: ${tk(o.total)} (ডেলিভারি ${tk(o.shipping)})</div><div class="acts2">${(NEXT[o.status]||[]).map(s=>`<button class="btn${s==="cancelled"?" alt":""}" data-o="${esc(o.id)}" data-s="${s}">${BTN[s]}</button>`).join("")}</div></article>`).join("")||'<p class="empty">কোনো অর্ডার নেই।</p>');
+    const L=await api("orders?select=id,name,phone,address,shipping,total,status,created_at,order_items(name,emoji,qty)&order=created_at.desc&limit=100");
+    const cnt=s=>L.filter(o=>o.status===s).length;
+    const pend=cnt("pending");
+    document.querySelectorAll("[data-pend]").forEach(n=>{n.textContent=pend?bn(pend):""});
+    const sales=L.filter(o=>o.status!=="cancelled").reduce((s,o)=>s+(+o.total||0),0);
+    const row=o=>`<li class="o"><div class="id"><b>${esc(o.id)}</b><small>${esc(fd(o.created_at))}</small></div><div class="cu">${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div><div class="it">${(o.order_items||[]).map(i=>`${esc(i.emoji||"")} ${esc(i.name)} × ${bn(i.qty)}`).join("<br>")}</div><div class="tt"><b>${tk(o.total)}</b><small>ডেলিভারি ${tk(o.shipping)}</small></div><div class="st"><span class="pill s-${esc(o.status)}">${esc(STATUS[o.status]||o.status)}</span></div><div class="ad">${esc(o.address)}</div><div class="ac">${(NEXT[o.status]||[]).map(s=>`<button type="button" class="b ${s==="cancelled"?"t":"p"}" data-o="${esc(o.id)}" data-s="${s}">${BTN[s]}</button>`).join("")}</div></li>`;
+    const draw=()=>{
+      const V=ofilter?L.filter(o=>o.status===ofilter):L;
+      const chips=[["","সব",L.length],...Object.entries(STATUS).map(([k,v])=>[k,v,cnt(k)])].map(([k,v,n])=>`<button type="button" data-f="${esc(k)}" aria-pressed="${k===ofilter}">${esc(v)} ${bn(n)}</button>`).join("");
+      pane.innerHTML=kpi([["প্রক্রিয়াধীন",bn(pend)],["পাঠানো হয়েছে",bn(cnt("shipped"))],["পৌঁছেছে",bn(cnt("delivered"))],["বিক্রি (বাতিল বাদে)",tk(sales)]])
+        +`<div class="fl" role="group" aria-label="অবস্থা অনুযায়ী">${chips}</div><ul class="list">${V.map(row).join("")||'<li class="em0">কোনো অর্ডার নেই।</li>'}</ul>`
+        +(L.length===100?'<p class="nt">সর্বশেষ ১০০টি অর্ডার দেখানো হচ্ছে।</p>':"");
+    };
+    draw();
     pane.onclick=async e=>{
       const f=e.target.closest("[data-f]");
-      if(f){ofilter=f.dataset.f;ordersPane();return}
+      if(f){ofilter=f.dataset.f;draw();return}
       const b=e.target.closest("[data-s]");if(!b)return;
       const id=b.dataset.o,s=b.dataset.s;
-      if(s==="cancelled"&&!confirm("অর্ডার "+id+" বাতিল করবেন? এটি আর ফেরানো যাবে না। পণ্যগুলো আবার stock-এ ফিরবে।"))return;
+      if(s==="cancelled"&&!confirm("অর্ডার "+id+" বাতিল করবেন? এটি আর ফেরানো যাবে না। পণ্যগুলো আবার স্টকে ফিরবে।"))return;
       b.disabled=true;
       try{
         const r=await api("orders?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({status:s})});
@@ -89,16 +189,18 @@ async function productsPane(){
   try{
     const [cs,ps]=await Promise.all([api("categories?select=id,name,emoji&order=sort"),api("products?select=id,name,category_id,price,emoji,description,stock,active&order=id")]);
     const cname=id=>{const c=cs.find(x=>x.id===id);return c?(c.emoji||"")+" "+c.name:"—"};
-    pane.innerHTML=`<h3 id="pft">নতুন পণ্য</h3>
+    const act=ps.filter(p=>p.active).length,out=ps.filter(p=>p.stock<=0).length;
+    pane.innerHTML=kpi([["মোট পণ্য",bn(ps.length)],["ক্রেতারা দেখছে",bn(act)],["স্টক শেষ",bn(out)]],"k3")
++`<details class="pn" id="pw"><summary id="pft">নতুন পণ্য</summary>
 <form id="pf"><input type="hidden" id="pid">
 <label for="pn">নাম</label><input id="pn" required maxlength="80">
-<div class="row2"><div><label for="pc">ক্যাটাগরি</label><select id="pc" required>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.emoji||"")} ${esc(c.name)}</option>`).join("")}</select></div><div><label for="pr">দাম (৳)</label><input id="pr" type="number" min="0" step="1" required inputmode="numeric"></div></div>
-<div class="row2"><div><label for="pe">Emoji</label><input id="pe" maxlength="8"></div><div><label for="ps">Stock</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
+<div class="fg2"><div><label for="pc">ক্যাটাগরি</label><select id="pc" required>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.emoji||"")} ${esc(c.name)}</option>`).join("")}</select></div><div><label for="pr">দাম (৳)</label><input id="pr" type="number" min="0" step="1" required inputmode="numeric"></div></div>
+<div class="fg2"><div><label for="pe">Emoji</label><input id="pe" maxlength="8"></div><div><label for="ps">স্টক</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
 <label for="pd">বিবরণ</label><textarea id="pd" rows="2" maxlength="300"></textarea>
-<label class="chk"><input type="checkbox" id="pa" checked> ক্রেতারা দেখবে</label>
-<p class="note">অর্ডার এলে stock নিজে কমে, বাতিল হলে ফেরত আসে। 0 হলে ক্রেতা অর্ডার করতে পারে না। নতুন মাল এলে এখান থেকে stock-এর সংখ্যা বাড়িয়ে দিন। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
-<div class="acts2"><button class="btn" type="submit">সংরক্ষণ করুন</button><button class="btn alt" type="button" id="pcl">ফর্ম খালি করুন</button></div></form>
-<h3>সব পণ্য (${bn(ps.length)})</h3>`+ps.map(p=>`<article class="ord${p.active?"":" off"}"><div class="oh"><b>${esc(p.emoji||"")} ${esc(p.name)}</b><span class="st">${p.active?"চালু":"লুকানো"}</span></div><small>${esc(cname(p.category_id))} · ${tk(p.price)} · stock ${bn(p.stock)}${p.stock<=0?" (শেষ)":""}</small><div class="acts2"><button class="btn alt" data-e="${+p.id}">সম্পাদনা</button><button class="btn alt" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></article>`).join("");
+<label class="ck" style="margin-top:14px"><input type="checkbox" id="pa" checked> ক্রেতারা দেখবে</label>
+<p class="nt">অর্ডার এলে স্টক নিজে কমে, বাতিল হলে ফেরত আসে। ০ হলে ক্রেতা অর্ডার করতে পারে না। নতুন মাল এলে এখান থেকে স্টকের সংখ্যা বাড়িয়ে দিন। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
+<div class="acts"><button class="b p" type="submit">সংরক্ষণ করুন</button><button class="b" type="button" id="pcl">ফর্ম খালি করুন</button></div></form></details>
+<ul class="list">`+(ps.map(p=>`<li class="r${p.active?"":" off"}"><div class="ra">${esc(p.emoji||"")} ${esc(p.name)}</div><div class="rb">${esc(cname(p.category_id))} · স্টক ${bn(p.stock)}</div><div class="rp">${tk(p.price)}</div><div class="rs"><span class="pill ${p.active?"s-neutral":"s-cancelled"}">${p.active?"চালু":"লুকানো"}</span>${p.stock<=0?'<span class="pill s-out">শেষ</span>':""}</div><div class="rx"><button type="button" class="b" data-e="${+p.id}">সম্পাদনা</button><button type="button" class="b t" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></li>`).join("")||'<li class="em0">কোনো পণ্য নেই।</li>')+"</ul>";
     const clear=()=>{$("pf").reset();$("pid").value="";$("pft").textContent="নতুন পণ্য"};
     $("pcl").onclick=clear;
     $("pf").onsubmit=async e=>{
@@ -118,7 +220,7 @@ async function productsPane(){
       if(ed){
         const p=ps.find(x=>x.id===+ed.dataset.e);if(!p)return;
         $("pid").value=p.id;$("pn").value=p.name;$("pc").value=p.category_id||"";$("pr").value=p.price;$("pe").value=p.emoji||"";$("ps").value=p.stock;$("pd").value=p.description||"";$("pa").checked=!!p.active;
-        $("pft").textContent="সম্পাদনা: "+p.name;$("pf").scrollIntoView({behavior:"smooth"});
+        $("pft").textContent="সম্পাদনা: "+p.name;$("pw").open=true;$("pw").scrollIntoView({behavior:"smooth",block:"start"});$("pn").focus({preventScroll:true});
       }
       if(tg){
         tg.disabled=true;
@@ -138,14 +240,15 @@ async function catsPane(){
   const pane=swap();pane.innerHTML=LOAD;
   try{
     const cs=await api("categories?select=id,name,emoji,color,sort&order=sort");
-    pane.innerHTML=`<h3 id="cft">নতুন ক্যাটাগরি</h3>
+    const hex=c=>/^#[0-9a-fA-F]{6}$/.test(c||"")?c:"#f4a300";
+    pane.innerHTML=`<details class="pn" id="cw"><summary id="cft">নতুন ক্যাটাগরি</summary>
 <form id="cf"><input type="hidden" id="cold">
-<div class="row2"><div><label for="ci">কোড (ইংরেজি ছোট অক্ষর, সংখ্যা, -)</label><input id="ci" required pattern="[a-z0-9\\-]{2,20}" maxlength="20"></div><div><label for="cn">নাম</label><input id="cn" required maxlength="40"></div></div>
-<div class="row2"><div><label for="ce">Emoji</label><input id="ce" maxlength="8"></div><div><label for="cc">রঙ</label><input id="cc" type="color" value="#f4a300"></div></div>
+<div class="fg2"><div><label for="ci">কোড (ইংরেজি ছোট অক্ষর, সংখ্যা, -)</label><input id="ci" required pattern="[a-z0-9\\-]{2,20}" maxlength="20"></div><div><label for="cn">নাম</label><input id="cn" required maxlength="40"></div></div>
+<div class="fg2"><div><label for="ce">Emoji</label><input id="ce" maxlength="8"></div><div><label for="cc">রঙ</label><input id="cc" type="color" value="#f4a300"></div></div>
 <label for="cs">ক্রম (ছোট সংখ্যা আগে)</label><input id="cs" type="number" step="1" value="10" inputmode="numeric">
-<p class="note">ক্যাটাগরি মোছা যায় না। কোড একবার বানালে বদলানো যায় না।</p>
-<div class="acts2"><button class="btn" type="submit">সংরক্ষণ করুন</button><button class="btn alt" type="button" id="ccl">ফর্ম খালি করুন</button></div></form>
-<h3>সব ক্যাটাগরি (${bn(cs.length)})</h3>`+cs.map(c=>`<article class="ord"><div class="oh"><b>${esc(c.emoji||"")} ${esc(c.name)}</b><span class="st">${esc(c.id)}</span></div><small>ক্রম ${bn(c.sort)}</small><div class="acts2"><button class="btn alt" data-e="${esc(c.id)}">সম্পাদনা</button></div></article>`).join("");
+<p class="nt">ক্যাটাগরি মোছা যায় না। কোড একবার বানালে বদলানো যায় না।</p>
+<div class="acts"><button class="b p" type="submit">সংরক্ষণ করুন</button><button class="b" type="button" id="ccl">ফর্ম খালি করুন</button></div></form></details>
+<ul class="list">`+(cs.map(c=>`<li class="r"><div class="ra">${esc(c.emoji||"")} ${esc(c.name)}</div><div class="rb">ক্রম ${bn(c.sort)}</div><div class="rp"><span class="sw" style="background:${hex(c.color)}" role="img" aria-label="রঙ"></span></div><div class="rs"><span class="pill s-neutral">${esc(c.id)}</span></div><div class="rx"><button type="button" class="b" data-e="${esc(c.id)}">সম্পাদনা</button></div></li>`).join("")||'<li class="em0">কোনো ক্যাটাগরি নেই।</li>')+"</ul>";
     const clear=()=>{$("cf").reset();$("cold").value="";$("ci").readOnly=false;$("cft").textContent="নতুন ক্যাটাগরি"};
     $("ccl").onclick=clear;
     $("cf").onsubmit=async e=>{
@@ -164,8 +267,8 @@ async function catsPane(){
       const ed=e.target.closest("[data-e]");if(!ed)return;
       const c=cs.find(x=>x.id===ed.dataset.e);if(!c)return;
       $("cold").value=c.id;$("ci").value=c.id;$("ci").readOnly=true;$("cn").value=c.name;$("ce").value=c.emoji||"";
-      $("cc").value=/^#[0-9a-fA-F]{6}$/.test(c.color||"")?c.color:"#f4a300";$("cs").value=c.sort;
-      $("cft").textContent="সম্পাদনা: "+c.name;$("cf").scrollIntoView({behavior:"smooth"});
+      $("cc").value=hex(c.color);$("cs").value=c.sort;
+      $("cft").textContent="সম্পাদনা: "+c.name;$("cw").open=true;$("cw").scrollIntoView({behavior:"smooth",block:"start"});$("cn").focus({preventScroll:true});
     };
   }catch(e){pane.innerHTML=FAIL}
 }
