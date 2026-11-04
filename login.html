@@ -7,7 +7,7 @@
 <label for="pw">পাসওয়ার্ড</label><input id="pw" type="password" required autocomplete="current-password">
 <label class="chk"><input type="checkbox" id="sp"> পাসওয়ার্ড দেখান</label>
 <button class="btn" type="submit" id="li">লগইন</button>
-<button class="btn alt" type="button" id="fp">পাসওয়ার্ড ভুলে গেছেন?</button></form>
+<a class="btn alt" id="fp" href="forgot-password.html">পাসওয়ার্ড ভুলে গেছেন?</a></form>
 <p style="text-align:center;margin-top:20px">অ্যাকাউন্ট নেই? <a id="toSignup" href="signup.html">নতুন অ্যাকাউন্ট খুলুন</a></p></main>
 <footer id="ft"></footer>
 <script src="mela.js"></script>
@@ -19,24 +19,17 @@ const NEXT=/^(account|cart|admin|shop|index|wishlist)\.html$/.test(nx)?nx:"accou
 $("toSignup").href="signup.html"+(NEXT==="account.html"?"":"?next="+NEXT);
 if(Mela.session())location.replace(NEXT);
 const say=(t,bad)=>{const m=$("msg");m.textContent=t;m.style.color=bad?"var(--red)":"var(--green)"};
-const nice=m=>/invalid login/i.test(m)?"ইমেইল বা পাসওয়ার্ড ভুল।"
+const nice=m=>/invalid login/i.test(m)?"ইমেইল বা পাসওয়ার্ড ভুল। মনে না পড়লে নিচের “পাসওয়ার্ড ভুলে গেছেন?” চাপুন।"
   :/not confirmed/i.test(m)?"আগে ইমেইল যাচাই করুন।"
   :/rate limit|too many|only request this after/i.test(m)?"অনেকবার চেষ্টা হয়েছে, একটু পরে আবার চেষ্টা করুন।"
   :"কাজটি হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।";
-const busy=b=>["li","fp"].forEach(i=>$(i).disabled=b);
 $("sp").onchange=e=>{$("pw").type=e.target.checked?"text":"password"};
+/* the email typed so far goes with the visitor to the recovery page */
+$("fp").onclick=e=>{const em=$("em");if(em.value&&em.checkValidity()){e.preventDefault();location.href="forgot-password.html?email="+encodeURIComponent(em.value.trim())}};
 $("lf").onsubmit=async e=>{
-  e.preventDefault();busy(true);say("");
+  e.preventDefault();$("li").disabled=true;say("");
   try{await Mela.signIn($("em").value.trim(),$("pw").value);location.href=NEXT;return}
   catch(err){say(nice(err.message),true)}
-  busy(false);
-};
-$("fp").onclick=async()=>{
-  const em=$("em");
-  if(!em.value||!em.checkValidity()){say("আগে উপরে আপনার ইমেইল লিখুন।",true);em.focus();return}
-  busy(true);
-  try{await Mela.recover(em.value.trim());say("ইমেইলটি নিবন্ধিত থাকলে পাসওয়ার্ড বদলানোর লিংক পাঠানো হয়েছে।")}
-  catch(err){say(nice(err.message),true)}
-  busy(false);
+  $("li").disabled=false;
 };
 </script></body></html>

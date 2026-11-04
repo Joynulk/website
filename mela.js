@@ -105,7 +105,8 @@ function signOut(){
   const s=session();del(SESSION_KEY);del("mela_user");
   if(s)auth("logout",null,s.access_token).catch(()=>{});
 }
-const recover=email=>auth("recover",{email});
+/* the reset email's link comes back to reset-password.html (it must be on Supabase's redirect list; if not, the site address is used and the forward below finds the page) */
+const recover=email=>auth("recover?redirect_to="+encodeURIComponent(new URL("reset-password.html",location.href).href),{email});
 const updatePassword=(tok,password)=>auth("user",{password},tok,"PUT");
 async function saveProfile(d){
   setUser(d);
@@ -114,8 +115,8 @@ async function saveProfile(d){
   const j=await auth("user",{data:{full_name:d.name,mobile:d.phone,address:d.addr}},t,"PUT");
   const s=session();if(s){s.user={id:j.id,email:j.email,meta:j.user_metadata||{}};set(SESSION_KEY,s)}
 }
-/* password-reset emails land on the site's address with a token in the #hash: forward to the account page */
-if(/type=recovery/.test(location.hash)&&!/account\.html$/.test(location.pathname))location.replace("account.html"+location.hash);
+/* password-reset emails land on the site's address with a token in the #hash: forward to the reset page */
+if(/type=recovery/.test(location.hash)&&!/(account|reset-password)\.html$/.test(location.pathname))location.replace("reset-password.html"+location.hash);
 
 async function sb(path,opt={}){
   const t=await token();
