@@ -39,6 +39,7 @@ main{max-width:1040px;margin:0 auto;padding:20px 16px 96px}
 
 /* buttons, pills, forms */
 .b{min-height:40px;padding:0 16px;border:1px solid var(--ct);border-radius:8px;background:none;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+a.b{display:inline-flex;align-items:center;text-decoration:none}
 .b.p{background:var(--pri);color:var(--onp);border-color:var(--pri)}
 .b.t{border-color:transparent;color:var(--mute)}
 .b:active{transform:scale(.97)}.b:disabled{opacity:.4;cursor:not-allowed}
@@ -57,6 +58,7 @@ code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:bre
 .up{display:flex;gap:12px;align-items:flex-start}.up>div{flex:1;min-width:0}
 .up img{flex:none;width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--ln)}
 .th{width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px}
+.box{padding:16px;border:1px solid var(--ln);border-radius:12px}.box h2{margin:0 0 4px;font-size:18px;font-weight:600}
 
 /* figures, filters, lists */
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:0 0 16px;border:1px solid var(--ln);border-radius:12px;background:var(--ln);overflow:hidden}
@@ -86,7 +88,7 @@ code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:bre
 .pn>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 16px;font-weight:600;cursor:pointer}.pn>summary::-webkit-details-marker{display:none}
 .pn>summary::after{content:"+";color:var(--mute);font-size:20px}.pn[open]>summary::after{content:"−"}
 .pn form{padding:0 16px 16px;border-top:1px solid var(--rl)}
-.pn .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.pn .acts,.box .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
 .gate{max-width:380px;margin:10vh auto 0;padding:0 16px}.gate h1{margin:16px 0 8px}.gate .b{margin-top:16px;width:100%}
 .toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translate(-50%,24px);opacity:0;background:var(--ink);color:var(--g);padding:10px 18px;border-radius:8px;transition:transform .25s,opacity .25s;z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.on{transform:translate(-50%,0);opacity:1}
@@ -99,7 +101,7 @@ code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:bre
 <script>
 const {$,bn,tk,esc,STATUS}=Mela;Mela.header("");
 const root=$("root"),api=Mela.request;
-const SIGN_URL="https://gjawsgadcwqlohvfakzp.supabase.co/functions/v1/cloudinary-sign";
+const FN="https://gjawsgadcwqlohvfakzp.supabase.co/functions/v1/";
 const NEXT={pending:["shipped","cancelled"],shipped:["delivered","cancelled"],delivered:[],cancelled:[]};
 const BTN={shipped:"পাঠানো হয়েছে",delivered:"পৌঁছেছে",cancelled:"বাতিল করুন"};
 const LOAD='<p class="nt">লোড হচ্ছে…</p>';
@@ -109,9 +111,10 @@ const svg=p=>`<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke
 const IC={
   orders:svg('<path d="M5 4h14v16l-3-2-2 2-2-2-2 2-2-2-3 2z"/><path d="M8 9h8M8 13h6"/>'),
   products:svg('<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'),
-  cats:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')
+  cats:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>'),
+  help:svg('<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>')
 };
-const NAV=[["orders","অর্ডার"],["products","পণ্য"],["cats","ক্যাটাগরি"]];
+const NAV=[["orders","অর্ডার"],["products","পণ্য"],["cats","ক্যাটাগরি"],["help","সহায়তা"]];
 const navBtns=NAV.map(([k,t])=>`<button type="button" data-t="${k}">${IC[k]}<span>${t}</span>${k==="orders"?'<i class="cn" data-pend></i>':""}</button>`).join("");
 let tab="orders",ofilter="";
 
@@ -123,7 +126,7 @@ async function start(){
   shell();
 }
 function gate(){
-  root.innerHTML=`<main class="gate" id="main"><div class="brand" style="padding:0"><b>মেলা</b><span>Admin</span></div><h1>লগইন</h1><form id="gf"><label for="ge">ইমেইল</label><input id="ge" name="email" type="email" required autocomplete="email"><label for="gp">পাসওয়ার্ড</label><input id="gp" name="password" type="password" required autocomplete="current-password"><p class="nt" id="gm" role="alert" style="color:var(--red)"></p><button class="b p" type="submit">লগইন</button></form></main>`;
+  root.innerHTML=`<main class="gate" id="main"><div class="brand" style="padding:0"><b>মেলা</b><span>Admin</span></div><h1>লগইন</h1><form id="gf"><label for="ge">ইমেইল</label><input id="ge" name="email" type="email" required autocomplete="email"><label for="gp">পাসওয়ার্ড</label><input id="gp" name="password" type="password" required autocomplete="current-password"><p class="nt" id="gm" role="alert" style="color:var(--red)"></p><button class="b p" type="submit">লগইন</button></form><p class="nt" style="text-align:center"><a href="forgot-password.html">পাসওয়ার্ড ভুলে গেছেন?</a></p></main>`;
   $("gf").onsubmit=async e=>{e.preventDefault();
     try{await Mela.signIn($("ge").value.trim(),$("gp").value);start()}
     catch(err){$("gm").textContent="লগইন হয়নি। ইমেইল ও পাসওয়ার্ড দেখুন।"}};
@@ -149,7 +152,7 @@ function show(){
   const name=NAV.find(n=>n[0]===tab)[1];
   $("ttl").textContent=name;
   document.title=name+" — Admin — মেলা";
-  ({orders:ordersPane,products:productsPane,cats:catsPane})[tab]();
+  ({orders:ordersPane,products:productsPane,cats:catsPane,help:helpPane})[tab]();
 }
 const swap=()=>{const p=$("pane"),n=p.cloneNode(false);p.replaceWith(n);return n}; /* fresh element so old click handlers go away */
 const kpi=(items,c)=>`<dl class="kpi${c?" "+c:""}">${items.map(([t,v])=>`<div><dt>${t}</dt><dd>${v}</dd></div>`).join("")}</dl>`;
@@ -200,7 +203,7 @@ async function uploadImage(file){
   const blob=await shrink(file);
   await Mela.isAdmin(); /* also renews the login token if it is about to expire */
   const ses=Mela.session();
-  const r=await fetch(SIGN_URL,{method:"POST",headers:{Authorization:"Bearer "+(ses&&ses.access_token),"Content-Type":"application/json"},body:"{}"});
+  const r=await fetch(FN+"cloudinary-sign",{method:"POST",headers:{Authorization:"Bearer "+(ses&&ses.access_token),"Content-Type":"application/json"},body:"{}"});
   if(r.status===500)throw new Error("setup");
   if(!r.ok)throw new Error("sign");
   const k=await r.json();
@@ -323,6 +326,41 @@ async function catsPane(){
       $("cft").textContent="সম্পাদনা: "+c.name;$("cw").open=true;$("cw").scrollIntoView({behavior:"smooth",block:"start"});$("cn").focus({preventScroll:true});
     };
   }catch(e){pane.innerHTML=FAIL}
+}
+
+/* ---------- help: password-reset link for a customer who cannot get the reset email ---------- */
+function helpPane(){
+  const pane=swap();
+  pane.innerHTML=`<div class="box"><h2>পাসওয়ার্ড রিসেট লিংক</h2>
+<p class="nt" style="margin-top:0">ক্রেতা পাসওয়ার্ড ভুলে ইমেইল না পেলে এখান থেকে একবারের লিংক বানিয়ে ফোন বা WhatsApp-এ পাঠান। লিংক যার হাতে পড়বে সে ওই অ্যাকাউন্টের পাসওয়ার্ড বদলাতে পারবে, তাই আগে নিশ্চিত হন ক্রেতা আসলে তিনিই।</p>
+<form id="rf2"><label for="rem">ক্রেতার অ্যাকাউন্টের ইমেইল</label><input id="rem" type="email" required autocomplete="off" inputmode="email">
+<div class="acts"><button class="b p" id="rgo" type="submit">লিংক বানান</button></div></form>
+<div id="rout" aria-live="polite"></div></div>`;
+  $("rf2").onsubmit=async e=>{
+    e.preventDefault();
+    const out=$("rout"),btn=$("rgo");out.innerHTML="";btn.disabled=true;
+    try{
+      await Mela.isAdmin();const ses=Mela.session();
+      const r=await fetch(FN+"admin-recovery-link",{method:"POST",headers:{Authorization:"Bearer "+(ses&&ses.access_token),"Content-Type":"application/json"},body:JSON.stringify({email:$("rem").value.trim()})});
+      if(r.status===404)throw new Error("nf");
+      if(r.status===400)throw new Error("bad");
+      if(!r.ok)throw new Error("fail");
+      const j=await r.json();
+      const msg="মেলা: আপনার পাসওয়ার্ড বদলানোর লিংক: "+j.link;
+      const wa=/^01[3-9]\d{8}$/.test(j.mobile||"")?"88"+j.mobile:"";
+      out.innerHTML=`<p style="margin:16px 0 4px"><b>যাচাই করুন:</b> নাম ${esc(j.name||"—")} · মোবাইল ${esc(j.mobile||"—")}</p>
+<label for="rlk">এককালীন লিংক</label><input id="rlk" readonly value="${esc(j.link)}">
+<div class="acts"><button type="button" class="b p" id="rcp">কপি করুন</button><a class="b" target="_blank" rel="noopener" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}">WhatsApp</a>${j.mobile?`<a class="b" href="sms:${esc(j.mobile)}?body=${encodeURIComponent(msg)}">SMS</a>`:""}</div>
+<p class="nt">লিংকটি একবারই কাজ করে আর কিছুক্ষণ পর অচল হয়ে যায়।</p>`;
+      $("rcp").onclick=async()=>{
+        try{await navigator.clipboard.writeText(j.link);Mela.toast("কপি হয়েছে")}
+        catch(x){$("rlk").select();Mela.toast("লিংক বাছা হয়েছে, কপি করুন")}
+      };
+    }catch(err){
+      out.innerHTML=`<p class="nt" style="color:var(--red)">${err.message==="nf"?"এই ইমেইলে কোনো অ্যাকাউন্ট পাওয়া যায়নি।":err.message==="bad"?"সঠিক ইমেইল লিখুন।":"লিংক বানানো যায়নি। আবার চেষ্টা করুন।"}</p>`;
+    }
+    btn.disabled=false;
+  };
 }
 
 start();
