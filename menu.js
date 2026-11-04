@@ -33,7 +33,7 @@
         +`<nav class="sl" aria-label="সাইটের মেনু">${link("index.html","🏠","হোম")}${link("shop.html","🛍️","সব পণ্য")}`
         +`<h3>ক্যাটাগরি</h3>${cats}`
         +`<h3>আমার</h3>${link("wishlist.html","♡","প্রিয় তালিকা")}${link("cart.html","🛒","কার্ট",`<b class="smb">${M.bn(M.cartCount())}</b>`)}${link("track.html","📦","অর্ডার ট্র্যাক")}${acc}`
-        +`<h3>সহায়তা</h3>${link("about.html","ℹ️","আমাদের কথা")}${link("policy.html","🚚","ডেলিভারি ও ফেরত")}${link("help.html","❓","প্রশ্নোত্তর")}</nav>`;
+        +`<h3>সহায়তা</h3>${link("contact.html","📞","যোগাযোগ")}${link("about.html","ℹ️","আমাদের কথা")}${link("policy.html","🚚","ডেলিভারি ও ফেরত")}${link("help.html","❓","প্রশ্নোত্তর")}</nav>`;
     }
     render();
     M.load().then(ok=>{if(ok)render()});
