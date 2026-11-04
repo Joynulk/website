@@ -17,9 +17,9 @@ function show(){
   const s=JSON.stringify(p);if(s===sig)return true;sig=s;
   document.title=p.n+" — মেলা";
   const cat=CATS.find(c=>c.id===p.c)||{n:"দোকান"};let vi=0,qty=1;
-  const out=Mela.soldOut(p),maxq=Math.min(20,p.s!=null?Math.max(p.s,1):20);
+  const out=Mela.soldOut(p),maxq=Math.min(20,p.s!=null?Math.max(p.s,1):20),im=Mela.img(p.i,900);
   $("pg").innerHTML=`<nav class="crumb" aria-label="পথ"><a href="index.html">হোম</a> › <a href="shop.html?c=${encodeURIComponent(p.c)}">${esc(cat.n)}</a> › ${esc(p.n)}</nav>
-<div class="pd"><div class="pimg" style="background:${tone(p.c)}66" aria-hidden="true">${esc(p.e)}</div>
+<div class="pd"><div class="pimg" style="background:${tone(p.c)}66;overflow:hidden" aria-hidden="true">${im?`<img src="${im}" alt="" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`:esc(p.e)}</div>
 <div class="pinfo"><h1>${esc(p.n)}</h1><div class="pprice" id="pp" aria-live="polite"></div><p>${esc(p.d)}</p>
 <div class="vs" id="vs" role="group" aria-label="ধরন">${VAR.map((v,i)=>`<button class="vr" data-i="${i}" aria-pressed="false">${v.n}${v.x?" +"+tk(v.x):""}</button>`).join("")}</div>
 <div class="qr"><div class="qc"><button id="mm" aria-label="কমান">−</button><b id="mq" aria-live="polite">১</b><button id="mpl" aria-label="বাড়ান">+</button></div><b id="tot" aria-live="polite"></b></div>

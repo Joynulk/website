@@ -38,6 +38,10 @@ const tone=id=>col((CATS.find(c=>c.id===id)||CATS[0]).c);
 const params=()=>new URLSearchParams(location.search);
 /* p.s is the stock from the database; the built-in starter list has none and counts as available */
 const soldOut=p=>p.s!=null&&p.s<=0;
+/* product pictures live on Cloudinary. Only Cloudinary upload addresses are accepted; the size is set in the address
+   (f_auto,q_auto = smallest good format, c_fill + ar_1:1 = square crop, w_ = width in pixels). Returns "" if none. */
+const CLD=/^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/image\/upload\//;
+const img=(u,w)=>CLD.test(u||"")?esc(u.replace("/image/upload/","/image/upload/f_auto,q_auto,c_fill,ar_1:1,w_"+(+w||400)+"/")):"";
 
 /* localStorage helpers */
 const get=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}};
@@ -133,12 +137,12 @@ function load(){
   if(loading)return loading;
   loading=Promise.all([
     sb("categories?select=id,name,emoji,color&order=sort"),
-    sb("products?select=id,name,category_id,price,emoji,description,stock&active=eq.true&order=id")
+    sb("products?select=id,name,category_id,price,emoji,description,stock,image_url&active=eq.true&order=id")
   ]).then(([cs,ps])=>{
     if(!cs.length||!ps.length)return false;
     applyCatalog(
       cs.map(c=>({id:c.id,n:c.name,e:c.emoji||"🏷️",c:c.color||"#f4a300"})),
-      ps.map(p=>({id:p.id,n:p.name,c:p.category_id,p:p.price,e:p.emoji||"🛍️",d:p.description||"",s:p.stock}))
+      ps.map(p=>({id:p.id,n:p.name,c:p.category_id,p:p.price,e:p.emoji||"🛍️",d:p.description||"",s:p.stock,i:p.image_url||null}))
     );
     set("mela_catalog",{CATS:CATS.slice(1),P:P.slice()});
     return true;
@@ -239,8 +243,8 @@ function header(active){
 
 /* product card used by shop, wishlist and product pages */
 function card(p){
-  const w=isWish(p.id),id=+p.id,out=soldOut(p);
-  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button></div></article>`;
+  const w=isWish(p.id),id=+p.id,out=soldOut(p),im=img(p.i,400);
+  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${im?`<img src="${im}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`:esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button></div></article>`;
 }
 function bindGrid(el,after){
   el.addEventListener("click",e=>{
@@ -250,5 +254,5 @@ function bindGrid(el,after){
   });
 }
 
-return{CATS,P,VAR,STATUS,bn,tk,$,esc,tone,soldOut,params,get,set,load,refresh,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,STATUS,bn,tk,$,esc,img,tone,soldOut,params,get,set,load,refresh,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
 })();
