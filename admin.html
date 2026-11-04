@@ -49,10 +49,14 @@ label{display:block;margin:12px 0 4px;font-size:13px;color:var(--mute)}
 input,select,textarea{width:100%;min-height:44px;padding:9px 12px;border:1px solid var(--ct);border-radius:8px;background:var(--g);color:var(--ink);font:inherit;font-size:16px}
 input:focus,select:focus,textarea:focus{border-color:var(--fc)}
 input[type=color]{padding:3px}
+input[type=file]{min-height:0;padding:8px;font-size:14px}
 .ck{display:flex;gap:10px;align-items:center;color:var(--ink);font-size:15px}.ck input{width:20px;height:20px;min-height:0}
 .fg2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 12px}@media(max-width:560px){.fg2{grid-template-columns:1fr}}
 .nt{margin:8px 0 0;font-size:13px;color:var(--mute)}
 code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:break-all;font-size:13px}
+.up{display:flex;gap:12px;align-items:flex-start}.up>div{flex:1;min-width:0}
+.up img{flex:none;width:72px;height:72px;border-radius:8px;object-fit:cover;border:1px solid var(--ln)}
+.th{width:32px;height:32px;border-radius:6px;object-fit:cover;vertical-align:middle;margin-right:8px}
 
 /* figures, filters, lists */
 .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin:0 0 16px;border:1px solid var(--ln);border-radius:12px;background:var(--ln);overflow:hidden}
@@ -95,6 +99,7 @@ code{padding:2px 6px;border:1px solid var(--ln);border-radius:6px;word-break:bre
 <script>
 const {$,bn,tk,esc,STATUS}=Mela;Mela.header("");
 const root=$("root"),api=Mela.request;
+const SIGN_URL="https://gjawsgadcwqlohvfakzp.supabase.co/functions/v1/cloudinary-sign";
 const NEXT={pending:["shipped","cancelled"],shipped:["delivered","cancelled"],delivered:[],cancelled:[]};
 const BTN={shipped:"পাঠানো হয়েছে",delivered:"পৌঁছেছে",cancelled:"বাতিল করুন"};
 const LOAD='<p class="nt">লোড হচ্ছে…</p>';
@@ -107,7 +112,6 @@ const IC={
   cats:svg('<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>')
 };
 const NAV=[["orders","অর্ডার"],["products","পণ্য"],["cats","ক্যাটাগরি"]];
-const TITLE=Object.fromEntries(NAV);
 const navBtns=NAV.map(([k,t])=>`<button type="button" data-t="${k}">${IC[k]}<span>${t}</span>${k==="orders"?'<i class="cn" data-pend></i>':""}</button>`).join("");
 let tab="orders",ofilter="";
 
@@ -142,8 +146,9 @@ function shell(){
 }
 function show(){
   document.querySelectorAll("[data-t]").forEach(b=>b.setAttribute("aria-current",b.dataset.t===tab?"page":"false"));
-  $("ttl").textContent=TITLE[tab]===undefined?"":NAV.find(n=>n[0]===tab)[1];
-  document.title=NAV.find(n=>n[0]===tab)[1]+" — Admin — মেলা";
+  const name=NAV.find(n=>n[0]===tab)[1];
+  $("ttl").textContent=name;
+  document.title=name+" — Admin — মেলা";
   ({orders:ordersPane,products:productsPane,cats:catsPane})[tab]();
 }
 const swap=()=>{const p=$("pane"),n=p.cloneNode(false);p.replaceWith(n);return n}; /* fresh element so old click handlers go away */
@@ -162,7 +167,7 @@ async function ordersPane(){
     const draw=()=>{
       const V=ofilter?L.filter(o=>o.status===ofilter):L;
       const chips=[["","সব",L.length],...Object.entries(STATUS).map(([k,v])=>[k,v,cnt(k)])].map(([k,v,n])=>`<button type="button" data-f="${esc(k)}" aria-pressed="${k===ofilter}">${esc(v)} ${bn(n)}</button>`).join("");
-      pane.innerHTML=kpi([["প্রক্রিয়াধীন",bn(pend)],["পাঠানো হয়েছে",bn(cnt("shipped"))],["পৌঁছেছে",bn(cnt("delivered"))],["বিক্রি (বাতিল বাদে)",tk(sales)]])
+      pane.innerHTML=kpi([["প্রক্রিয়াধীন",bn(pend)],["পাঠানো হয়েছে",bn(cnt("shipped"))],["পৌঁছেছে",bn(cnt("delivered"))],["বিক্রি (বাতিল বাদ)",tk(sales)]])
         +`<div class="fl" role="group" aria-label="অবস্থা অনুযায়ী">${chips}</div><ul class="list">${V.map(row).join("")||'<li class="em0">কোনো অর্ডার নেই।</li>'}</ul>`
         +(L.length===100?'<p class="nt">সর্বশেষ ১০০টি অর্ডার দেখানো হচ্ছে।</p>':"");
     };
@@ -183,29 +188,75 @@ async function ordersPane(){
   }catch(e){pane.innerHTML=FAIL}
 }
 
+/* ---------- product pictures: shrink in the browser, then upload straight to Cloudinary with a signed ticket ---------- */
+async function shrink(file){
+  const bmp=await createImageBitmap(file);
+  const s=Math.min(1,1200/Math.max(bmp.width,bmp.height));
+  const c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);
+  const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(bmp,0,0,c.width,c.height);
+  return new Promise((ok,no)=>c.toBlob(b=>b?ok(b):no(new Error("shrink")),"image/jpeg",.85));
+}
+async function uploadImage(file){
+  const blob=await shrink(file);
+  await Mela.isAdmin(); /* also renews the login token if it is about to expire */
+  const ses=Mela.session();
+  const r=await fetch(SIGN_URL,{method:"POST",headers:{Authorization:"Bearer "+(ses&&ses.access_token),"Content-Type":"application/json"},body:"{}"});
+  if(r.status===500)throw new Error("setup");
+  if(!r.ok)throw new Error("sign");
+  const k=await r.json();
+  const fd=new FormData();
+  fd.append("file",blob,"product.jpg");
+  ["api_key","timestamp","signature","folder","allowed_formats"].forEach(n=>fd.append(n,k[n]));
+  const u=await fetch("https://api.cloudinary.com/v1_1/"+encodeURIComponent(k.cloud)+"/image/upload",{method:"POST",body:fd});
+  const j=await u.json().catch(()=>null);
+  if(!u.ok||!j||!j.secure_url)throw new Error("upload");
+  return j.secure_url;
+}
+
 /* ---------- products ---------- */
 async function productsPane(){
   const pane=swap();pane.innerHTML=LOAD;
   try{
-    const [cs,ps]=await Promise.all([api("categories?select=id,name,emoji&order=sort"),api("products?select=id,name,category_id,price,emoji,description,stock,active&order=id")]);
+    const [cs,ps]=await Promise.all([api("categories?select=id,name,emoji&order=sort"),api("products?select=id,name,category_id,price,emoji,description,stock,active,image_url&order=id")]);
     const cname=id=>{const c=cs.find(x=>x.id===id);return c?(c.emoji||"")+" "+c.name:"—"};
     const act=ps.filter(p=>p.active).length,out=ps.filter(p=>p.stock<=0).length;
-    pane.innerHTML=kpi([["মোট পণ্য",bn(ps.length)],["ক্রেতারা দেখছে",bn(act)],["স্টক শেষ",bn(out)]],"k3")
+    const thumb=p=>{const u=Mela.img(p.image_url,80);return u?`<img class="th" src="${u}" alt="" loading="lazy">`:""};
+    pane.innerHTML=kpi([["মোট পণ্য",bn(ps.length)],["ক্রেতারা দেখছেন",bn(act)],["স্টক শেষ",bn(out)]],"k3")
 +`<details class="pn" id="pw"><summary id="pft">নতুন পণ্য</summary>
-<form id="pf"><input type="hidden" id="pid">
+<form id="pf"><input type="hidden" id="pid"><input type="hidden" id="pimg">
 <label for="pn">নাম</label><input id="pn" required maxlength="80">
 <div class="fg2"><div><label for="pc">ক্যাটাগরি</label><select id="pc" required>${cs.map(c=>`<option value="${esc(c.id)}">${esc(c.emoji||"")} ${esc(c.name)}</option>`).join("")}</select></div><div><label for="pr">দাম (৳)</label><input id="pr" type="number" min="0" step="1" required inputmode="numeric"></div></div>
-<div class="fg2"><div><label for="pe">Emoji</label><input id="pe" maxlength="8"></div><div><label for="ps">স্টক</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
+<div class="fg2"><div><label for="pe">Emoji (ছবি না থাকলে এটা দেখাবে)</label><input id="pe" maxlength="8"></div><div><label for="ps">স্টক</label><input id="ps" type="number" min="0" step="1" value="100" inputmode="numeric"></div></div>
+<label for="pfile">ছবি (ঐচ্ছিক)</label>
+<div class="up"><img id="pprev" alt="ছবির প্রিভিউ" hidden><div><input id="pfile" type="file" accept="image/jpeg,image/png,image/webp"><p class="nt" id="pstat" role="status">ছবি বাছলে নিজে ছোট করে Cloudinary-তে তুলবে। তারপর সংরক্ষণ করুন।</p><button type="button" class="b t" id="prm" hidden>ছবি সরান</button></div></div>
 <label for="pd">বিবরণ</label><textarea id="pd" rows="2" maxlength="300"></textarea>
 <label class="ck" style="margin-top:14px"><input type="checkbox" id="pa" checked> ক্রেতারা দেখবে</label>
 <p class="nt">অর্ডার এলে স্টক নিজে কমে, বাতিল হলে ফেরত আসে। ০ হলে ক্রেতা অর্ডার করতে পারে না। নতুন মাল এলে এখান থেকে স্টকের সংখ্যা বাড়িয়ে দিন। পণ্য মোছা যায় না, শুধু "দেখবে" তুলে দিতে পারেন।</p>
-<div class="acts"><button class="b p" type="submit">সংরক্ষণ করুন</button><button class="b" type="button" id="pcl">ফর্ম খালি করুন</button></div></form></details>
-<ul class="list">`+(ps.map(p=>`<li class="r${p.active?"":" off"}"><div class="ra">${esc(p.emoji||"")} ${esc(p.name)}</div><div class="rb">${esc(cname(p.category_id))} · স্টক ${bn(p.stock)}</div><div class="rp">${tk(p.price)}</div><div class="rs"><span class="pill ${p.active?"s-neutral":"s-cancelled"}">${p.active?"চালু":"লুকানো"}</span>${p.stock<=0?'<span class="pill s-out">শেষ</span>':""}</div><div class="rx"><button type="button" class="b" data-e="${+p.id}">সম্পাদনা</button><button type="button" class="b t" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></li>`).join("")||'<li class="em0">কোনো পণ্য নেই।</li>')+"</ul>";
-    const clear=()=>{$("pf").reset();$("pid").value="";$("pft").textContent="নতুন পণ্য"};
+<div class="acts"><button class="b p" id="psave" type="submit">সংরক্ষণ করুন</button><button class="b" type="button" id="pcl">ফর্ম খালি করুন</button></div></form></details>
+<ul class="list">`+(ps.map(p=>`<li class="r${p.active?"":" off"}"><div class="ra">${thumb(p)}${esc(p.emoji||"")} ${esc(p.name)}</div><div class="rb">${esc(cname(p.category_id))} · স্টক ${bn(p.stock)}</div><div class="rp">${tk(p.price)}</div><div class="rs"><span class="pill ${p.active?"s-neutral":"s-cancelled"}">${p.active?"চালু":"লুকানো"}</span>${p.stock<=0?'<span class="pill s-out">শেষ</span>':""}</div><div class="rx"><button type="button" class="b" data-e="${+p.id}">সম্পাদনা</button><button type="button" class="b t" data-v="${+p.id}" data-on="${p.active?0:1}">${p.active?"লুকান":"দেখান"}</button></div></li>`).join("")||'<li class="em0">কোনো পণ্য নেই।</li>')+"</ul>";
+    const setImg=u=>{
+      $("pimg").value=u||"";
+      const v=$("pprev"),src=Mela.img(u,160);
+      if(src){v.src=src;v.hidden=false}else{v.removeAttribute("src");v.hidden=true}
+      $("prm").hidden=!src;
+    };
+    const clear=()=>{$("pf").reset();$("pid").value="";setImg("");$("pft").textContent="নতুন পণ্য";$("pstat").textContent=""};
     $("pcl").onclick=clear;
+    $("prm").onclick=()=>{setImg("");$("pfile").value="";$("pstat").textContent="ছবি সরানো হয়েছে। সংরক্ষণ করলে কার্যকর হবে।"};
+    $("pfile").onchange=async e=>{
+      const f=e.target.files[0];if(!f)return;
+      const st=$("pstat"),sv=$("psave");
+      sv.disabled=true;st.textContent="ছবি আপলোড হচ্ছে…";
+      try{setImg(await uploadImage(f));st.textContent="ছবি যোগ হয়েছে। এখন সংরক্ষণ করুন।"}
+      catch(err){
+        st.textContent=err.message==="setup"?"Cloudinary সেটআপ বাকি: Supabase-এ CLOUDINARY_URL secret দিন।":err.message==="sign"?"আপলোডের অনুমতি পাওয়া যায়নি। আবার লগইন করুন।":"ছবি আপলোড হয়নি। অন্য ছবি (JPG, PNG, WebP) দিয়ে চেষ্টা করুন।";
+        e.target.value="";
+      }
+      sv.disabled=false;
+    };
     $("pf").onsubmit=async e=>{
       e.preventDefault();
-      const body={name:$("pn").value.trim(),category_id:$("pc").value,price:parseInt($("pr").value,10),emoji:$("pe").value.trim()||null,description:$("pd").value.trim(),stock:parseInt($("ps").value,10)||0,active:$("pa").checked};
+      const body={name:$("pn").value.trim(),category_id:$("pc").value,price:parseInt($("pr").value,10),emoji:$("pe").value.trim()||null,description:$("pd").value.trim(),stock:parseInt($("ps").value,10)||0,active:$("pa").checked,image_url:$("pimg").value||null};
       if(!body.name||!(body.price>=0)){Mela.toast("নাম ও দাম দিন");return}
       try{
         const id=$("pid").value;
@@ -220,6 +271,7 @@ async function productsPane(){
       if(ed){
         const p=ps.find(x=>x.id===+ed.dataset.e);if(!p)return;
         $("pid").value=p.id;$("pn").value=p.name;$("pc").value=p.category_id||"";$("pr").value=p.price;$("pe").value=p.emoji||"";$("ps").value=p.stock;$("pd").value=p.description||"";$("pa").checked=!!p.active;
+        setImg(p.image_url);$("pstat").textContent="";
         $("pft").textContent="সম্পাদনা: "+p.name;$("pw").open=true;$("pw").scrollIntoView({behavior:"smooth",block:"start"});$("pn").focus({preventScroll:true});
       }
       if(tg){
