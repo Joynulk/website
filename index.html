@@ -1,18 +1,23 @@
-<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>মেলা — সব কিছুর মেলা, এক জায়গায়</title></head><body>
+<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#38bdf8"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="mela.css"><title>মেলা — দেশি শখের জিনিস, সেরা দামে</title></head><body>
 <header id="hd"></header>
 <main class="bleed" id="main">
-<section class="tile t-d hero"><h1>সব কিছুর মেলা,<br>এক জায়গায়</h1><p class="lead">দেশি শখের জিনিস, হাতের কাজ আর রোজকার প্রয়োজন।</p><div class="cta"><a class="btn" href="shop.html">কেনাকাটা শুরু করুন</a><a class="btn alt" href="#cats">দোকান ঘুরে দেখুন ›</a></div></section>
-<div class="tiles" id="cats"></div>
-<section class="sec"><div class="bar"><h2>জনপ্রিয় পণ্য</h2><a href="shop.html">সব পণ্য দেখুন ›</a></div><div class="grid" id="feat"></div></section>
-<section class="t-p"><div class="perk3"><div><span aria-hidden="true">🚚</span><b>ক্যাশ অন ডেলিভারি</b><small>পণ্য হাতে পেয়ে টাকা দিন</small></div><div><span aria-hidden="true">🔁</span><b>৭ দিনে ফেরত</b><small>পছন্দ না হলে ফেরত দিন</small></div><div><span aria-hidden="true">🎁</span><b>২০০০ টাকায় ফ্রি ডেলিভারি</b><small>২০০০ টাকা বা তার বেশি কিনলে</small></div></div></section>
+<section class="hero"><div class="hero-in"><span class="chip2">সারাদেশে ক্যাশ অন ডেলিভারি</span><h1>দেশি শখের জিনিস, সেরা দামে</h1><p>হাতের কাজ, শাড়ি-পোশাক, খাবার আর ঘরকন্নার প্রয়োজনীয় জিনিস — এক জায়গায়।</p><a class="btn" href="shop.html">এখনই কিনুন</a></div><div class="hero-art" aria-hidden="true"><span>🥻</span><span>🏺</span><span>🍯</span></div></section>
+<section class="trust" aria-label="সুবিধা">
+<div><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg><span><b>ক্যাশ অন ডেলিভারি</b><small>পণ্য হাতে পেয়ে টাকা দিন</small></span></div>
+<div><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/></svg><span><b>৭ দিনে ফেরত</b><small>পছন্দ না হলে ফেরত</small></span></div>
+<div><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 6h11v9H2zM13 9h4l3 3v3h-7"/><circle cx="6" cy="17" r="1.8"/><circle cx="16" cy="17" r="1.8"/></svg><span><b>২০০০ টাকায় ফ্রি ডেলিভারি</b><small>নিচে ডেলিভারি ৬০ টাকা</small></span></div>
+<div><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></svg><span><b>অর্ডার ট্র্যাক</b><small>লগইন ছাড়াই অবস্থা জানুন</small></span></div>
+</section>
+<section class="sec"><div class="sh"><h2>ক্যাটাগরি অনুযায়ী কিনুন</h2><a href="shop.html">সব দেখুন ›</a></div><div class="cats" id="cats"></div></section>
+<section class="sec"><div class="sh"><h2>জনপ্রিয় পণ্য</h2><a href="shop.html">সব পণ্য ›</a></div><div class="grid" id="feat"></div></section>
+<section class="sec" style="padding-bottom:40px"><a class="btn alt" href="shop.html" style="max-width:320px;margin:8px auto 0">আরও পণ্য দেখুন</a></section>
 </main>
 <footer id="ft"></footer>
 <script src="mela.js"></script>
 <script>
 const {CATS,P,$,esc}=Mela;Mela.header("");
-const shade=["t-l","t-d","t-p"];
 function draw(){
-  $("cats").innerHTML=CATS.filter(c=>c.id!=="all").map((c,i)=>`<a class="tile ${shade[i%3]}" href="shop.html?c=${encodeURIComponent(c.id)}"><span class="te" aria-hidden="true">${esc(c.e)}</span><h2>${esc(c.n)}</h2><span class="tl">দেখুন ›</span></a>`).join("");
+  $("cats").innerHTML=CATS.filter(c=>c.id!=="all").map(c=>`<a class="cat" href="shop.html?c=${encodeURIComponent(c.id)}"><span class="ci" aria-hidden="true">${esc(c.e)}</span>${esc(c.n)}</a>`).join("");
   $("feat").innerHTML=P.slice(0,8).map(p=>Mela.card(p)).join("");
 }
 Mela.bindGrid($("feat"));

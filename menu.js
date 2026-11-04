@@ -12,8 +12,9 @@
     const btn=document.createElement("button");
     btn.type="button";btn.className="mbtn";
     btn.setAttribute("aria-label","মেনু খুলুন");btn.setAttribute("aria-expanded","false");btn.setAttribute("aria-controls","sm");
-    btn.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
-    hd.insertBefore(btn,hd.firstChild);
+    btn.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+    const host=hd.querySelector(".hb")||hd;
+    host.insertBefore(btn,host.firstChild);
 
     const ov=document.createElement("div");ov.className="smo";
     const panel=document.createElement("aside");

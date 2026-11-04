@@ -179,7 +179,7 @@ const myOrders=()=>sb("orders?select=id,total,status,created_at,order_items(name
 /* cart: lines [{k:"id:variant",n,e,pr,q}] under mela_cart */
 const cartLines=()=>get("mela_cart",[]).filter(l=>l.q>0);
 const cartCount=()=>cartLines().reduce((s,l)=>s+l.q,0);
-function refreshBadge(){const b=$("cb");if(b)b.textContent=bn(cartCount())}
+function refreshBadge(){document.querySelectorAll("[data-cb]").forEach(b=>{b.textContent=bn(cartCount())})}
 /* returns false when the product is sold out */
 function addToCart(id,vi=0,q=1){
   vi=+vi||0;const p=P.find(x=>x.id==id);if(!p||soldOut(p))return false;
@@ -204,7 +204,7 @@ function toast(t){
 function pageSetup(){
   const hd=document.head;
   if(!hd.querySelector('meta[name="theme-color"]')){
-    const e=document.createElement("meta");e.name="theme-color";e.content="#000000";hd.appendChild(e);
+    const e=document.createElement("meta");e.name="theme-color";e.content="#38bdf8";hd.appendChild(e);
   }
   if(!hd.querySelector('link[href="https://fonts.gstatic.com"]')){
     const l=document.createElement("link");l.rel="preconnect";l.href="https://fonts.gstatic.com";l.crossOrigin="";hd.appendChild(l);
@@ -226,16 +226,32 @@ function pageSetup(){
   document.querySelectorAll("input[id],select[id],textarea[id]").forEach(e=>{if(!e.name&&e.type!=="hidden")e.name=e.id});
 }
 
+/* line icons used by the header and the floating buttons */
+const ico=p=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
+const IC={
+  search:ico('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>'),
+  heart:ico('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'),
+  cart:ico('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h3l2.4 11h10l2-8H7"/>'),
+  user:ico('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'),
+  box:ico('<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'),
+  wa:'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/><path d="M16.6 14.2c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.6-1.2.1-.2 0-.3 0-.4l-.7-1.6c-.2-.4-.3-.4-.5-.4h-.4c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.3c.1.2 1.6 2.5 3.9 3.5 1.4.6 2 .7 2.7.6.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1l-.5-.2z"/></svg>'
+};
+
 /* shared header + footer */
 function header(active){
   pageSetup();
-  const h=$("hd");
+  const h=$("hd"),here=location.pathname.split("/").pop()||"index.html";
   if(h){
-    const a=(href,key,ico,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}><span aria-hidden="true">${ico}</span><span class="t">&nbsp;${t}</span>${extra}</a>`;
-    h.innerHTML=`<a class="logo" href="index.html">মেলা</a><nav class="nv" aria-label="প্রধান মেনু">${a("shop.html","shop","🛍️","দোকান")}${a("wishlist.html","wish","♡","প্রিয়")}${a("account.html","acc","👤","অ্যাকাউন্ট")}${a("cart.html","cart","🛒","কার্ট",`<b class="bd" id="cb">${bn(cartCount())}</b>`)}</nav>`;
+    const ic=(href,key,svg,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}>${svg}<span>${t}</span>${extra}</a>`;
+    const tn=(href,t)=>`<a href="${href}"${here===href?' class="on" aria-current="page"':""}>${t}</a>`;
+    h.innerHTML=`<div class="hb"><a class="logo" href="index.html">মেলা</a><form class="hs" action="shop.html" method="get" role="search"><input type="search" name="q" placeholder="পণ্য খুঁজুন… (পাঞ্জাবি, শাড়ি)" aria-label="পণ্য খুঁজুন" autocomplete="off"><button type="submit" aria-label="খুঁজুন">${IC.search}</button></form><nav class="ic" aria-label="দ্রুত লিংক">${ic("track.html","track",IC.box,"ট্র্যাক")}${ic("wishlist.html","wish",IC.heart,"প্রিয়")}${ic("cart.html","cart",IC.cart,"কার্ট",`<b class="bd" id="cb" data-cb>${bn(cartCount())}</b>`)}${ic("account.html","acc",IC.user,"অ্যাকাউন্ট")}</nav></div><nav class="tn" aria-label="প্রধান মেনু">${tn("index.html","হোম")}${tn("shop.html","দোকান")}${tn("track.html","অর্ডার ট্র্যাক")}${tn("contact.html","যোগাযোগ")}${tn("help.html","প্রশ্নোত্তর")}${tn("about.html","আমাদের কথা")}</nav>`;
+    if(!document.querySelector(".fab")){
+      const cartFab=/^(cart|order-placed)\.html$/.test(here)?"":`<a class="fab ct" href="cart.html" aria-label="কার্ট">${IC.cart}<b class="bd" data-cb>${bn(cartCount())}</b></a>`;
+      document.body.insertAdjacentHTML("beforeend",cartFab+`<a class="fab wa" href="https://wa.me/8801911753985" target="_blank" rel="noopener" aria-label="WhatsApp-এ মেসেজ করুন">${IC.wa}</a>`);
+    }
   }
   const f=$("ft");
-  if(f)f.innerHTML=`<div class="fg"><div><h4>কেনাকাটা</h4><a href="shop.html">সব পণ্য</a><a href="wishlist.html">প্রিয় তালিকা</a><a href="cart.html">কার্ট</a></div><div><h4>অ্যাকাউন্ট</h4><a href="account.html">আমার অ্যাকাউন্ট</a><a href="login.html">লগইন</a><a href="signup.html">নতুন অ্যাকাউন্ট</a></div><div><h4>সহায়তা</h4><a href="contact.html">যোগাযোগ</a><a href="about.html">আমাদের কথা</a><a href="policy.html">ডেলিভারি ও ফেরত</a><a href="help.html">প্রশ্নোত্তর</a></div></div><p class="fl">© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত</p>`;
+  if(f)f.innerHTML=`<div class="fg"><div><h4>কেনাকাটা</h4><a href="shop.html">সব পণ্য</a><a href="wishlist.html">প্রিয় তালিকা</a><a href="cart.html">কার্ট</a></div><div><h4>অ্যাকাউন্ট</h4><a href="account.html">আমার অ্যাকাউন্ট</a><a href="login.html">লগইন</a><a href="signup.html">নতুন অ্যাকাউন্ট</a></div><div><h4>সহায়তা</h4><a href="contact.html">যোগাযোগ</a><a href="about.html">আমাদের কথা</a><a href="policy.html">ডেলিভারি ও ফেরত</a><a href="help.html">প্রশ্নোত্তর</a></div></div><p class="fl">© মেলা ২০২৬ · ক্যাশ অন ডেলিভারি · ৭ দিনে ফেরত · ফোন: <a href="tel:+8801911753985">01911-753985</a></p>`;
   /* slide menu (hamburger + left drawer) lives in menu.js / menu.css */
   if(h&&!document.querySelector('script[src="menu.js"]')){
     const s=document.createElement("script");s.src="menu.js";document.body.appendChild(s);
@@ -245,12 +261,13 @@ function header(active){
 /* product card used by shop, wishlist and product pages */
 function card(p){
   const w=isWish(p.id),id=+p.id,out=soldOut(p),im=img(p.i,400);
-  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${im?`<img src="${im}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`:esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><button class="add" data-a="${id}"${out?" disabled":""}>${out?"স্টক নেই":"কার্টে যোগ করুন"}</button></div></article>`;
+  return `<article class="p"><a class="ph" href="product.html?id=${id}" style="background:${tone(p.c)}55" aria-label="${esc(p.n)} বিস্তারিত">${im?`<img src="${im}" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block">`:esc(p.e)}</a><button class="hrt${w?" on":""}" data-w="${id}" aria-label="প্রিয় তালিকা" aria-pressed="${w}">${w?"♥":"♡"}</button><div class="in"><h3><a href="product.html?id=${id}">${esc(p.n)}</a></h3><span class="pr">${tk(p.p)}</span><div class="cb">${out?'<button class="add" disabled>স্টক নেই</button>':`<button class="add alt" data-a="${id}">কার্টে দিন</button><button class="add" data-b="${id}">অর্ডার করুন</button>`}</div></div></article>`;
 }
 function bindGrid(el,after){
   el.addEventListener("click",e=>{
-    const a=e.target.closest("[data-a]"),w=e.target.closest("[data-w]");
+    const a=e.target.closest("[data-a]"),b=e.target.closest("[data-b]"),w=e.target.closest("[data-w]");
     if(a){const p=P.find(x=>x.id==a.dataset.a);if(p&&addToCart(a.dataset.a))toast(p.n+" কার্টে যোগ হয়েছে");else toast("স্টক নেই")}
+    if(b){if(addToCart(b.dataset.b))location.href="cart.html";else toast("স্টক নেই")}
     if(w){const on=toggleWish(w.dataset.w);w.classList.toggle("on",on);w.textContent=on?"♥":"♡";w.setAttribute("aria-pressed",on);if(after)after()}
   });
 }
