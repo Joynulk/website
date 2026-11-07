@@ -1,5 +1,20 @@
 /* মেলা — shared data and helpers (plain browser JS, no build step) */
 const Mela=(()=>{
+/* ---- light / dark theme: follows the phone until the visitor taps the theme button, then remembers the choice ---- */
+const THEME_KEY="mela_theme";
+function savedTheme(){try{return localStorage.getItem(THEME_KEY)}catch(e){return null}}
+function isDark(){
+  const t=document.documentElement.getAttribute("data-theme");
+  return t?t==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+}
+function applyTheme(t){
+  const r=document.documentElement;
+  if(t==="light"||t==="dark")r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");
+  const m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.content=isDark()?"#0e2433":"#38bdf8";
+}
+applyTheme(savedTheme());
+
 /* built-in starter catalogue: used until (or if) the Supabase copy can be loaded */
 const CATS=[
  {id:"all",n:"সব দোকান",e:"🎪",c:"#f4a300"},
@@ -204,8 +219,9 @@ function toast(t){
 function pageSetup(){
   const hd=document.head;
   if(!hd.querySelector('meta[name="theme-color"]')){
-    const e=document.createElement("meta");e.name="theme-color";e.content="#38bdf8";hd.appendChild(e);
+    const e=document.createElement("meta");e.name="theme-color";e.content=isDark()?"#0e2433":"#38bdf8";hd.appendChild(e);
   }
+  applyTheme(savedTheme());
   if(!hd.querySelector('link[href="https://fonts.gstatic.com"]')){
     const l=document.createElement("link");l.rel="preconnect";l.href="https://fonts.gstatic.com";l.crossOrigin="";hd.appendChild(l);
   }
@@ -234,8 +250,26 @@ const IC={
   cart:ico('<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M3 4h3l2.4 11h10l2-8H7"/>'),
   user:ico('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>'),
   box:ico('<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/>'),
+  moon:ico('<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>'),
+  sun:ico('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   wa:'<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/><path d="M16.6 14.2c-.2-.1-1.4-.7-1.6-.8-.2-.1-.4-.1-.5.1l-.7.9c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.6-1.2.1-.2 0-.3 0-.4l-.7-1.6c-.2-.4-.3-.4-.5-.4h-.4c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 1.9s.8 2.2.9 2.3c.1.2 1.6 2.5 3.9 3.5 1.4.6 2 .7 2.7.6.4-.1 1.4-.6 1.6-1.1.2-.5.2-1 .1-1.1l-.5-.2z"/></svg>'
 };
+
+/* the theme button shows the mode you would switch to */
+function paintThemeBtn(){
+  const dark=isDark();
+  document.querySelectorAll("[data-theme-btn]").forEach(b=>{
+    b.innerHTML=(dark?IC.sun:IC.moon)+"<span>"+(dark?"লাইট":"ডার্ক")+"</span>";
+    b.setAttribute("aria-label",dark?"লাইট মোড চালু করুন":"ডার্ক মোড চালু করুন");
+  });
+}
+function toggleTheme(){
+  const next=isDark()?"light":"dark";
+  try{localStorage.setItem(THEME_KEY,next)}catch(e){}
+  applyTheme(next);paintThemeBtn();
+}
+document.addEventListener("click",e=>{if(e.target.closest("[data-theme-btn]"))toggleTheme()});
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(!savedTheme()){applyTheme(null);paintThemeBtn()}})}catch(e){}
 
 /* shared header + footer */
 function header(active){
@@ -244,7 +278,8 @@ function header(active){
   if(h){
     const ic=(href,key,svg,t,extra="")=>`<a href="${href}" aria-label="${t}"${active===key?' class="on" aria-current="page"':""}>${svg}<span>${t}</span>${extra}</a>`;
     const tn=(href,t)=>`<a href="${href}"${here===href?' class="on" aria-current="page"':""}>${t}</a>`;
-    h.innerHTML=`<div class="hb"><a class="logo" href="index.html">মেলা</a><form class="hs" action="shop.html" method="get" role="search"><input type="search" name="q" placeholder="পণ্য খুঁজুন… (পাঞ্জাবি, শাড়ি)" aria-label="পণ্য খুঁজুন" autocomplete="off"><button type="submit" aria-label="খুঁজুন">${IC.search}</button></form><nav class="ic" aria-label="দ্রুত লিংক">${ic("track.html","track",IC.box,"ট্র্যাক")}${ic("wishlist.html","wish",IC.heart,"প্রিয়")}${ic("cart.html","cart",IC.cart,"কার্ট",`<b class="bd" id="cb" data-cb>${bn(cartCount())}</b>`)}${ic("account.html","acc",IC.user,"অ্যাকাউন্ট")}</nav></div><nav class="tn" aria-label="প্রধান মেনু">${tn("index.html","হোম")}${tn("shop.html","দোকান")}${tn("track.html","অর্ডার ট্র্যাক")}${tn("contact.html","যোগাযোগ")}${tn("help.html","প্রশ্নোত্তর")}${tn("about.html","আমাদের কথা")}</nav>`;
+    h.innerHTML=`<div class="hb"><a class="logo" href="index.html">মেলা</a><form class="hs" action="shop.html" method="get" role="search"><input type="search" name="q" placeholder="পণ্য খুঁজুন… (পাঞ্জাবি, শাড়ি)" aria-label="পণ্য খুঁজুন" autocomplete="off"><button type="submit" aria-label="খুঁজুন">${IC.search}</button></form><nav class="ic" aria-label="দ্রুত লিংক">${ic("track.html","track",IC.box,"ট্র্যাক")}${ic("wishlist.html","wish",IC.heart,"প্রিয়")}${ic("cart.html","cart",IC.cart,"কার্ট",`<b class="bd" id="cb" data-cb>${bn(cartCount())}</b>`)}${ic("account.html","acc",IC.user,"অ্যাকাউন্ট")}<button type="button" class="tg" data-theme-btn></button></nav></div><nav class="tn" aria-label="প্রধান মেনু">${tn("index.html","হোম")}${tn("shop.html","দোকান")}${tn("track.html","অর্ডার ট্র্যাক")}${tn("contact.html","যোগাযোগ")}${tn("help.html","প্রশ্নোত্তর")}${tn("about.html","আমাদের কথা")}</nav>`;
+    paintThemeBtn();
     if(!document.querySelector(".fab")){
       const cartFab=/^(cart|order-placed)\.html$/.test(here)?"":`<a class="fab ct" href="cart.html" aria-label="কার্ট">${IC.cart}<b class="bd" data-cb>${bn(cartCount())}</b></a>`;
       document.body.insertAdjacentHTML("beforeend",cartFab+`<a class="fab wa" href="https://wa.me/8801911753985" target="_blank" rel="noopener" aria-label="WhatsApp-এ মেসেজ করুন">${IC.wa}</a>`);
@@ -272,5 +307,5 @@ function bindGrid(el,after){
   });
 }
 
-return{CATS,P,VAR,STATUS,bn,tk,$,esc,img,tone,soldOut,params,get,set,load,refresh,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid};
+return{CATS,P,VAR,STATUS,bn,tk,$,esc,img,tone,soldOut,params,get,set,load,refresh,request:sb,isAdmin,placeOrder,myOrders,session,loggedIn,signUp,signIn,signOut,recover,updatePassword,saveProfile,cartLines,cartCount,refreshBadge,addToCart,wish,isWish,toggleWish,orders,addOrder,user,setUser,toast,header,card,bindGrid,toggleTheme,isDark};
 })();
