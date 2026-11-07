@@ -1,6 +1,8 @@
 /* মেলা — slide menu (hamburger + left drawer). Loaded by Mela.header() on every page. */
 (()=>{
   if(window.__slideMenu)return;window.__slideMenu=1;
+  /* search and share tags for this page */
+  const sj=document.createElement("script");sj.src="seo.js";document.body.appendChild(sj);
   const css=document.createElement("link");css.rel="stylesheet";css.href="menu.css";
   css.onload=build;css.onerror=build;document.head.appendChild(css);
 
