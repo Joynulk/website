@@ -1,0 +1,63 @@
+# HOW TO USE THIS FILE
+# The automatic tools cannot create files under .github/workflows (GitHub blocks it), so add it by hand once:
+#   GitHub repo -> Add file -> Create new file -> name it   .github/workflows/pages.yml
+#   -> paste everything BELOW this comment block -> Commit.
+# Then: Settings -> Pages -> Source = "GitHub Actions", and run the "Deploy site" workflow from the Actions tab.
+#
+name: Deploy site
+
+# Builds the React app (react-app/) and publishes it together with the existing static pages:
+#   https://joynulk.github.io/website/       -> the static pages (unchanged)
+#   https://joynulk.github.io/website/app/   -> the React app
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build the React app
+        working-directory: react-app
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Put the site together
+        run: |
+          mkdir _site
+          rsync -a --exclude='.git' --exclude='.github' --exclude='react-app' --exclude='Doc' --exclude='supabase' --exclude='_site' ./ _site/
+          mkdir -p _site/app
+          cp -r react-app/dist/. _site/app/
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
