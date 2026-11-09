@@ -1,14 +1,14 @@
 # HOW TO USE THIS FILE
-# The automatic tools cannot create files under .github/workflows (GitHub blocks it), so add it by hand once:
-#   GitHub repo -> Add file -> Create new file -> name it   .github/workflows/pages.yml
+# The automatic tools cannot create files under .github/workflows (GitHub blocks it), so add it by hand once, on the main branch:
+#   GitHub repo (branch: main) -> Add file -> Create new file -> name it   .github/workflows/pages.yml
 #   -> paste everything BELOW this comment block -> Commit.
 # Then: Settings -> Pages -> Source = "GitHub Actions", and run the "Deploy site" workflow from the Actions tab.
 #
+# How it works: the static pages come from the main branch, the React app comes from the react-app branch.
+# After new work lands on the react-app branch, run the workflow again (Actions -> Deploy site -> Run workflow).
+#
 name: Deploy site
 
-# Builds the React app (react-app/) and publishes it together with the existing static pages:
-#   https://joynulk.github.io/website/       -> the static pages (unchanged)
-#   https://joynulk.github.io/website/app/   -> the React app
 on:
   push:
     branches: [main]
@@ -27,14 +27,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # static pages (main branch)
       - uses: actions/checkout@v4
+
+      # React app source (react-app branch)
+      - uses: actions/checkout@v4
+        with:
+          ref: react-app
+          path: _react
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Build the React app
-        working-directory: react-app
+        working-directory: _react/react-app
         run: |
           npm install --no-audit --no-fund
           npm run build
@@ -42,9 +49,9 @@ jobs:
       - name: Put the site together
         run: |
           mkdir _site
-          rsync -a --exclude='.git' --exclude='.github' --exclude='react-app' --exclude='Doc' --exclude='supabase' --exclude='_site' ./ _site/
+          rsync -a --exclude='.git' --exclude='.github' --exclude='react-app' --exclude='_react' --exclude='Doc' --exclude='supabase' --exclude='_site' ./ _site/
           mkdir -p _site/app
-          cp -r react-app/dist/. _site/app/
+          cp -r _react/react-app/dist/. _site/app/
 
       - uses: actions/configure-pages@v5
 
